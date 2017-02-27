@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = %q{Deploy application to ECS.}
   spec.description   = %q{This package provides the service deployment function of ECS.}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/naomichi-y/ecs_deployer"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
