@@ -51,7 +51,12 @@ module EcsDeployer
     def update_service(service_name, wait = true, timeout = 300)
       register_clone_task(service_name) if @new_task_definition_arn.empty?
       @ecs_command.update_service(service_name, @family_name, @revision)
-      wait_for_deploy if wait
+      wait_for_deploy(service_name, timeout) if wait
+    end
+
+    # @return [String]
+    def log
+      @ecs_command.log
     end
 
     private

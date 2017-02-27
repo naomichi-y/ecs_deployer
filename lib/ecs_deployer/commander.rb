@@ -77,6 +77,11 @@ module EcsDeployer
       exec('register-task-definition', args)
     end
 
+    # @return [String]
+    def log
+      @runtime.buffered_log
+    end
+
     private
     # @param [String] command
     # @param [Hash] args
@@ -93,12 +98,10 @@ module EcsDeployer
       command = "aws ecs #{command} #{arg}"
       result = @runtime.exec(command)
 
-      raise EcsCommandError.new unless result.buffered_stderr.empty?
+      raise CommandError.new unless result.buffered_stderr.empty?
 
       result = result.buffered_stdout
       Oj.load(result)
     end
   end
-
-  class EcsCommandError < RuntimeError; end
 end
