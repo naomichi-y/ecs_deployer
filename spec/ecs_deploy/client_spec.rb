@@ -1,10 +1,10 @@
 require "spec_helper"
 
-module EcsDeploy
+module EcsDeployer
   describe Client do
     describe 'initialize' do
       it 'should be return instance' do
-        expect(EcsDeploy::Client.new('test')).to be_a(EcsDeploy::Client)
+        expect(EcsDeployer::Client.new('test')).to be_a(EcsDeployer::Client)
       end
     end
   end

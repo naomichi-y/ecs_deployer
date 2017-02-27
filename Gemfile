@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in ecs_deploy.gemspec
+# Specify your gem's dependencies in ecs_deployer.gemspec
 gemspec

@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'ecs_deploy/version'
+require 'ecs_deployer/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "ecs_deploy"
-  spec.version       = EcsDeploy::VERSION
+  spec.name          = "ecs_deployer"
+  spec.version       = EcsDeployer::VERSION
   spec.authors       = ["naomichi-y"]
   spec.email         = ["n.yamakita@gmail.com"]
 

@@ -1,7 +1,7 @@
 require "spec_helper"
 
-RSpec.describe EcsDeploy do
+RSpec.describe EcsDeployer do
   it "has a version number" do
-    expect(EcsDeploy::VERSION).not_to be nil
+    expect(EcsDeployer::VERSION).not_to be nil
   end
 end

@@ -1,8 +1,8 @@
 require 'yaml'
 require 'runtime_command'
-require 'ecs_deploy/commander'
+require 'ecs_deployer/commander'
 
-module EcsDeploy
+module EcsDeployer
   class Client
     PAULING_INTERVAL = 20
 
@@ -10,7 +10,7 @@ module EcsDeploy
     # @param [Hash] options
     # @option options [String] :profile
     # @option options [String] :region
-    # @return [EcsDeploy::Client]
+    # @return [EcsDeployer::Client]
     def initialize(cluster_name, options = {})
       @cluster_name = cluster_name
       @ecs_command = Commander.new(cluster_name, options)

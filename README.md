@@ -1,4 +1,4 @@
-# EcsDeploy
+# EcsDeployer
 
 This package provides the service deployment function of ECS.
 
@@ -7,7 +7,7 @@ This package provides the service deployment function of ECS.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'ecs_deploy'
+gem 'ecs_deployer'
 ```
 
 And then execute:
@@ -16,12 +16,12 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install ecs_deploy
+    $ gem install ecs_deployer
 
 ## Usage
 
 ```
-ecs_deploy = EcsDeploy::Client.new('cluster_name')
-ecs_deploy.register_task('development.yml')
-ecs_deploy.update_service('application')
+ecs_deployer = EcsDeployer::Client.new('cluster_name')
+ecs_deployer.register_task('development.yml')
+ecs_deployer.update_service('application')
 ```

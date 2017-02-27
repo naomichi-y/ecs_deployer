@@ -1,10 +1,10 @@
 require "spec_helper"
 
-module EcsDeploy
+module EcsDeployer
   describe Commander do
     describe 'initialize' do
       it 'should be return instance' do
-        expect(EcsDeploy::Commander.new('test')).to be_a(EcsDeploy::Commander)
+        expect(EcsDeployer::Commander.new('test')).to be_a(EcsDeployer::Commander)
       end
     end
   end

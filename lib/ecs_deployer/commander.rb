@@ -1,11 +1,11 @@
 require 'oj'
 require 'runtime_command'
 
-module EcsDeploy
+module EcsDeployer
   class Commander
     # @param [String] cluster_name
     # @param [Hash] options
-    # @return EcsDeploy::Commander
+    # @return EcsDeployer::Commander
     def initialize(cluster_name, options = {})
       @runtime = RuntimeCommand::Builder.new
       @options = options
