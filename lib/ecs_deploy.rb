@@ -1,5 +1,9 @@
-require "ecs_deploy/version"
+require 'ecs_deploy/version'
+require 'ecs_deploy/client'
+require 'ecs_deploy/error'
 
 module EcsDeploy
-  # Your code goes here...
+  class ServiceNotFoundError < EcsDeploy::Error; end
+  class TaskNotFoundError < EcsDeploy::Error; end
+  class DeployTimeoutError < EcsDeploy::Error; end
 end
