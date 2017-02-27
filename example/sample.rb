@@ -1,7 +1,7 @@
 require 'bundler/setup'
 require 'ecs_deployer'
 
-task_path = File.expand_path('./fixtures/production.yml', File.dirname(File.realpath(__FILE__)))
+task_path = File.expand_path('./fixtures/task.yml', File.dirname(File.realpath(__FILE__)))
 
 ecs_deployer = EcsDeployer::Client.new('sandbox-ecs-production')
 ecs_deployer.register_task(task_path)

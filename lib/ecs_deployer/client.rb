@@ -23,7 +23,20 @@ module EcsDeployer
     # @return [String]
     def register_task(task_path)
       raise IOError.new("File does not exist. [#{task_path}]") if !File.exist?(task_path)
-      register_task_process(YAML.load(File.read(task_path)))
+      register_task_hash(YAML.load(File.read(task_path)))
+    end
+
+    # @param [Hash] task_hash
+    # @return [String]
+    def register_task_hash(task_hash)
+      result = @ecs_command.register_task_definition(
+        task_hash['family'],
+        task_hash['containerDefinitions']
+      )
+
+      @family_name = result['taskDefinition']['family']
+      @revision = result['taskDefinition']['revision']
+      @new_task_definition_arn = result['taskDefinition']['taskDefinitionArn']
     end
 
     # @param [String] service_name
@@ -115,19 +128,5 @@ module EcsDeployer
 
       raise ServiceNotFoundError.new("'#{service_name}' service is not found.") unless detected_service
     end
-
-    # @param [Hash] task_definition
-    # @return [String]
-    def register_task_process(task_definition)
-      result = @ecs_command.register_task_definition(
-        task_definition['family'],
-        task_definition['containerDefinitions']
-      )
-
-      @family_name = result['taskDefinition']['family']
-      @revision = result['taskDefinition']['revision']
-      @new_task_definition_arn = result['taskDefinition']['taskDefinitionArn']
-    end
   end
-
 end
