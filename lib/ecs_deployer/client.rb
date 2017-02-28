@@ -6,15 +6,16 @@ module EcsDeployer
   class Client
     PAULING_INTERVAL = 20
 
-    # @param [String] cluster_name
+    # @param [String] cluster
     # @param [Hash] options
     # @option options [String] :profile
     # @option options [String] :region
     # @return [EcsDeployer::Client]
-    def initialize(cluster_name, options = {})
-      @cluster_name = cluster_name
-      @ecs_command = Commander.new(cluster_name, options)
-      @family_name = ''
+    def initialize(cluster, options = {})
+      @cluster = cluster
+      @runtime = RuntimeCommand::Builder.new
+      @ecs_command = Commander.new(@runtime, options)
+      @family = ''
       @revision = ''
       @new_task_definition_arn = ''
     end
@@ -29,42 +30,43 @@ module EcsDeployer
     # @param [Hash] task_hash
     # @return [String]
     def register_task_hash(task_hash)
-      result = @ecs_command.register_task_definition(
-        task_hash['family'],
-        task_hash['containerDefinitions']
-      )
+      result = @ecs_command.register_task_definition(task_hash['family'], task_hash['containerDefinitions'])
 
-      @family_name = result['taskDefinition']['family']
+      @family = result['taskDefinition']['family']
       @revision = result['taskDefinition']['revision']
       @new_task_definition_arn = result['taskDefinition']['taskDefinitionArn']
     end
 
-    # @param [String] service_name
+    # @param [String] service
     # @return [String]
-    def register_clone_task(service_name)
+    def register_clone_task(service)
       detected_service = false
 
-      result = @ecs_command.describe_services(service_name)
-      result['services'].each do |service|
-        if service['serviceName'] == service_name
-          result = @ecs_command.describe_task_definition(service['taskDefinition'])
-          @new_task_definition_arn = register_task_process(result['taskDefinition'])
+      result = @ecs_command.describe_services([service], { 'cluster': @cluster })
+      result['services'].each do |svc|
+        if svc['serviceName'] == service
+          result = @ecs_command.describe_task_definition(svc['taskDefinition'])
+          @new_task_definition_arn = register_task_hash(result['taskDefinition'])
           detected_service = true
           break
         end
       end
 
-      raise ServiceNotFoundError.new("'#{service_name}' service is not found.") unless detected_service
+      raise ServiceNotFoundError.new("'#{service}' service is not found.") unless detected_service
 
       @new_task_definition_arn
     end
 
-    # @param [String] service_name
+    # @param [String] service
     # @param [Fixnum] timeout
-    def update_service(service_name, wait = true, timeout = 300)
-      register_clone_task(service_name) if @new_task_definition_arn.empty?
-      @ecs_command.update_service(service_name, @family_name, @revision)
-      wait_for_deploy(service_name, timeout) if wait
+    def update_service(service, wait = true, timeout = 600)
+      register_clone_task(service) if @new_task_definition_arn.empty?
+      options = {
+        'cluster': @cluster,
+        'task-definition': @family + ':' + @revision.to_s
+      }
+      @ecs_command.update_service(service, options)
+      wait_for_deploy(service, timeout) if wait
     end
 
     # @return [String]
@@ -73,60 +75,66 @@ module EcsDeployer
     end
 
     private
-    def wait_for_deploy(service_name, timeout)
+    def wait_for_deploy(service, timeout)
       detected_service = false
 
-      result = @ecs_command.describe_services(service_name)
-      result['services'].each do |service|
-        next unless service['serviceName'] == service_name
+      result = @ecs_command.describe_services([service], { 'cluster': @cluster })
+      result['services'].each do |svc|
+        next unless svc['serviceName'] == service
         detected_service = true
 
-        result = @ecs_command.describe_task_definition(service['taskDefinition'])
+        result = @ecs_command.describe_task_definition(svc['taskDefinition'])
 
-        if service['desiredCount'] > 0
+        if svc['desiredCount'] > 0
           running_new_task = false
           wait_time = 0
-          puts 'Start deploing...'
+          @runtime.puts 'Start deploing...'
 
           begin
             sleep(PAULING_INTERVAL)
             wait_time += PAULING_INTERVAL
 
             # Get current tasks
-            result = @ecs_command.list_tasks(service_name)
+            options = {
+              'cluster': @cluster,
+              'service-name': service,
+              'desired-status': 'RUNNING'
+            }
+            result = @ecs_command.list_tasks(options)
 
-            if result['taskArns'].size > 0
-              success_count = 0
+            raise TaskNotFoundError.new('Desired count is 0.') if result['taskArns'].size == 0
 
-              result = @ecs_command.describe_tasks(result['taskArns'])
-              result['tasks'].each do |task|
-                success_count += 1 if @new_task_definition_arn == task['taskDefinitionArn']
-              end
+            new_running_count = 0
+            result = @ecs_command.describe_tasks(result['taskArns'], { 'cluster': @cluster })
 
-              if result['tasks'].size == success_count
-                puts 'Service update succeeded.'
-                puts "New task definition: #{@new_task_definition_arn}"
+            result['tasks'].each do |task|
+              new_running_count += 1 if @new_task_definition_arn == task['taskDefinitionArn']
+            end
 
-                running_new_task = true
-              end
+            current_running_count = result['tasks'].size
+
+            if current_running_count == new_running_count
+              @runtime.puts "Service update succeeded. [#{new_running_count}/#{current_running_count}]"
+              @runtime.puts "New task definition: #{@new_task_definition_arn}"
+
+              running_new_task = true
+
             else
-              raise TaskNotFoundError.new('Desired count is 0.')
+              @runtime.puts "Deploying... [#{new_running_count}/#{current_running_count}] (#{wait_time} seconds elapsed)"
+              @runtime.puts 'You can stop process with Ctrl+C. Deployment will continue.'
+
+              if wait_time > timeout
+                @runtime.puts "New task definition: #{@new_task_definition_arn}"
+                raise DeployTimeoutError.new('Service is being updating, but process is timed out.')
+              end
             end
-
-            if wait_time > timeout
-              puts "New task definition: #{@new_task_definition_arn}"
-              raise DeployTimeoutError.new('Service is being updating, but process is timed out.')
-            end
-
-            puts "Deploying... (#{wait_time} seconds elapsed)"
-
           end while !running_new_task
         end
 
         break
       end
 
-      raise ServiceNotFoundError.new("'#{service_name}' service is not found.") unless detected_service
+      raise ServiceNotFoundError.new("'#{service}' service is not found.") unless detected_service
     end
   end
 end

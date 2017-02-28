@@ -1,80 +1,61 @@
 require 'oj'
-require 'runtime_command'
 
 module EcsDeployer
   class Commander
-    # @param [String] cluster_name
+    # @param [RuntimeCommand::Builder] runtime
     # @param [Hash] options
     # @return EcsDeployer::Commander
-    def initialize(cluster_name, options = {})
-      @runtime = RuntimeCommand::Builder.new
+    def initialize(runtime, options = {})
+      @runtime = runtime
       @options = options
-      @cluster_name = cluster_name
     end
 
-    # @param [String] service_name
-    # @param [String] family_name
-    # @param [Fixnum] revision
+    # @param [String] service
+    # @param [Hash] options
     # @return [Hash]
-    def update_service(service_name, family_name, revision)
-      args = {
-        'cluster': @cluster_name,
-        'service':  service_name,
-        'task-definition': family_name + ':' + revision.to_s
-      }
-
-      exec('update-service', args)
+    def update_service(service, options = {})
+      options['service'] = service
+      exec('update-service', options)
     end
 
-    # @param [String] service_name
+    # @param [Hash] options
     # @return [Hash]
-    def list_tasks(service_name)
-      args = {
-        'cluster': @cluster_name,
-        'service-name': service_name,
-        'desired-status': 'RUNNING'
-      }
-      exec('list-tasks', args)
+    def list_tasks(options = {})
+      exec('list-tasks', options)
     end
 
     # @param [Array] tasks
+    # @param [Hash] options
     # @return [Hash]
-    def describe_tasks(tasks)
-      args = {
-        'cluster': @cluster_name,
-        'tasks': tasks.join(' ')
-      }
-      exec('describe-tasks', args)
+    def describe_tasks(tasks, options = {})
+      options['tasks'] = tasks.join(' ')
+      exec('describe-tasks', options)
     end
 
     # @param [String] task_definition
+    # @param [Hash] options
     # @return [Hash]
-    def describe_task_definition(task_definition)
-      args = {
-        'task-definition': task_definition
-      }
-      exec('describe-task-definition', args)
+    def describe_task_definition(task_definition, options = {})
+      options['task-definition'] = task_definition
+      exec('describe-task-definition', options)
     end
 
-    # @param [String] service_name
+    # @param [Array] services
+    # @param [Hash] options
     # @return [Hash]
-    def describe_services(service_name)
-      args = {
-        'cluster': @cluster_name,
-        'services': service_name
-      }
-      exec('describe-services', args)
+    def describe_services(services, options = {})
+      options['services'] = services.join(' ')
+      exec('describe-services', options)
     end
 
-    # @param [String] family_name
+    # @param [String] family
     # @param [Hash] container_definitions
+    # @param [Hash] options
     # @return [Hash]
-    def register_task_definition(family_name, container_definitions)
-      args = {
-        'family': family_name,
-        'container-definitions': '"' + Oj.dump(container_definitions).gsub('"', '\\"') + '"'
-      }
-      exec('register-task-definition', args)
+    def register_task_definition(family, container_definitions, options = {})
+      options['family'] = family
+      options['container-definitions'] = '"' + Oj.dump(container_definitions).gsub('"', '\\"') + '"'
+      exec('register-task-definition', options)
     end
 
     # @return [String]
@@ -84,24 +65,23 @@ module EcsDeployer
 
     private
     # @param [String] command
-    # @param [Hash] args
+    # @param [Hash] params
     # @return [Hash]
-    def exec(command, args)
+    def exec(command, params)
       arg = ''
-      args.each do |name, value|
+      params.each do |name, value|
         arg << "--#{name} #{value} "
       end
 
-      arg << "--profile #{@options[:profile]} " if @options.has_key?(:profile)
-      arg << "--region #{@options[:region]} " if @options.has_key?(:region)
+      arg << "--profile #{params[:profile]} " if params.has_key?(:profile)
+      arg << "--region #{params[:region]} " if params.has_key?(:region)
 
       command = "aws ecs #{command} #{arg}"
       result = @runtime.exec(command)
 
       raise CommandError.new unless result.buffered_stderr.empty?
 
-      result = result.buffered_stdout
-      Oj.load(result)
+      Oj.load(result.buffered_stdout)
     end
   end
 end
