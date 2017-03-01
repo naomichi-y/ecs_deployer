@@ -6,13 +6,11 @@ module EcsDeployer
   class Client
     PAULING_INTERVAL = 20
 
-    # @param [String] cluster
     # @param [Hash] options
     # @option options [String] :profile
     # @option options [String] :region
     # @return [EcsDeployer::Client]
-    def initialize(cluster, options = {})
-      @cluster = cluster
+    def initialize(options = {})
       @runtime = RuntimeCommand::Builder.new
       @ecs_command = Commander.new(@runtime, options)
       @family = ''
@@ -37,12 +35,13 @@ module EcsDeployer
       @new_task_definition_arn = result['taskDefinition']['taskDefinitionArn']
     end
 
+    # @param [String] cluster
     # @param [String] service
     # @return [String]
-    def register_clone_task(service)
+    def register_clone_task(cluster, service)
       detected_service = false
 
-      result = @ecs_command.describe_services([service], { 'cluster': @cluster })
+      result = @ecs_command.describe_services([service], { 'cluster': cluster })
       result['services'].each do |svc|
         if svc['serviceName'] == service
           result = @ecs_command.describe_task_definition(svc['taskDefinition'])
@@ -57,16 +56,17 @@ module EcsDeployer
       @new_task_definition_arn
     end
 
+    # @param [String] cluster
     # @param [String] service
     # @param [Fixnum] timeout
-    def update_service(service, wait = true, timeout = 600)
+    def update_service(cluster, service, wait = true, timeout = 600)
       register_clone_task(service) if @new_task_definition_arn.empty?
       options = {
-        'cluster': @cluster,
+        'cluster': cluster,
         'task-definition': @family + ':' + @revision.to_s
       }
       @ecs_command.update_service(service, options)
-      wait_for_deploy(service, timeout) if wait
+      wait_for_deploy(cluster, service, timeout) if wait
     end
 
     # @return [String]
@@ -75,10 +75,13 @@ module EcsDeployer
     end
 
     private
-    def wait_for_deploy(service, timeout)
+    # @param [String] cluster
+    # @param [String] service
+    # @param [Fixnum] timeout
+    def wait_for_deploy(cluster, service, timeout)
       detected_service = false
 
-      result = @ecs_command.describe_services([service], { 'cluster': @cluster })
+      result = @ecs_command.describe_services([service], { 'cluster': cluster })
       result['services'].each do |svc|
         next unless svc['serviceName'] == service
         detected_service = true
@@ -96,7 +99,7 @@ module EcsDeployer
 
             # Get current tasks
             options = {
-              'cluster': @cluster,
+              'cluster': cluster,
               'service-name': service,
               'desired-status': 'RUNNING'
             }
@@ -105,7 +108,7 @@ module EcsDeployer
             raise TaskNotFoundError.new('Desired count is 0.') if result['taskArns'].size == 0
 
             new_running_count = 0
-            result = @ecs_command.describe_tasks(result['taskArns'], { 'cluster': @cluster })
+            result = @ecs_command.describe_tasks(result['taskArns'], { 'cluster': cluster })
 
             result['tasks'].each do |task|
               new_running_count += 1 if @new_task_definition_arn == task['taskDefinitionArn']

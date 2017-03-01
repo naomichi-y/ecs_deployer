@@ -6,4 +6,4 @@ task_path = File.expand_path('./fixtures/task.yml', File.dirname(File.realpath(_
 ecs_deployer = EcsDeployer::Client.new('sandbox-ecs-production')
 ecs_deployer.register_task(task_path)
 ecs_deployer.update_service('application')
-# ecs_deployer.log
+#ecs_deployer.log
