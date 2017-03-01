@@ -50,7 +50,7 @@ family: hello_world
 ## Usage
 
 ```
-ecs_deployer = EcsDeployer::Client.new()
+ecs_deployer = EcsDeployer::Client.new
 ecs_deployer.register_task('development.yml')
 ecs_deployer.update_service('cluster', 'application')
 ```
