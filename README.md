@@ -25,14 +25,14 @@ For available parameters see [Task Definition Parameters](http://docs.aws.amazon
 The sample file is in `example/fixtures/task.yml`.
 
 ```
-containerDefinitions:
+container_definitions:
 - name: wordpress
   links:
   - mysql
   image: wordpress
   essential: true
-  portMappings:
-  - containerPort: 80
+  port_mappings:
+  - container_port: 80
     hostPort: 80
   memory: 500
   cpu: 10
@@ -52,5 +52,5 @@ family: hello_world
 ```
 ecs_deployer = EcsDeployer::Client.new
 ecs_deployer.register_task('development.yml')
-ecs_deployer.update_service('cluster', 'application')
+ecs_deployer.update_service('cluster', 'development')
 ```
