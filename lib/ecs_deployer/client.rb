@@ -18,7 +18,7 @@ module EcsDeployer
       @family = ''
       @revision = ''
       @new_task_definition_arn = ''
-      @commander = Aws::ECS::Client.new
+      @commander = Aws::ECS::Client.new(options)
     end
 
     # @param [String] task_path
