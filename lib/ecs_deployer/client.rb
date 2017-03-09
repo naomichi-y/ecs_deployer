@@ -7,7 +7,7 @@ module EcsDeployer
   class Client
     PAULING_INTERVAL = 20
 
-    attr_reader :commander
+    attr_reader :cli
 
     # @param [Hash] options
     # @option options [String] :profile
@@ -18,7 +18,7 @@ module EcsDeployer
       @family = ''
       @revision = ''
       @new_task_definition_arn = ''
-      @commander = Aws::ECS::Client.new(options)
+      @cli = Aws::ECS::Client.new(options)
     end
 
     # @param [String] task_path
@@ -33,7 +33,7 @@ module EcsDeployer
     def register_task_hash(task_hash)
       task_hash = Oj.load(Oj.dump(task_hash), symbol_keys: true)
 
-      result = @commander.register_task_definition({
+      result = @cli.register_task_definition({
         container_definitions: task_hash[:container_definitions],
         family: task_hash[:family],
         task_role_arn: task_hash[:task_role_arn]
@@ -50,14 +50,14 @@ module EcsDeployer
     def register_clone_task(cluster, service)
       detected_service = false
 
-      result = @commander.describe_services({
+      result = @cli.describe_services({
         cluster: cluster,
         services: [service]
       })
 
       result[:services].each do |svc|
         if svc[:service_name] == service
-          result = @commander.describe_task_definition({
+          result = @cli.describe_task_definition({
             task_definition: svc[:task_definition]
           })
           @new_task_definition_arn = register_task_hash(result[:task_definition])
@@ -77,7 +77,7 @@ module EcsDeployer
     def update_service(cluster, service, wait = true, timeout = 600)
       register_clone_task(service) if @new_task_definition_arn.empty?
 
-      @commander.update_service({
+      @cli.update_service({
         cluster: cluster,
         service: service,
         task_definition: @family + ':' + @revision.to_s
@@ -92,7 +92,7 @@ module EcsDeployer
     def wait_for_deploy(cluster, service, timeout)
       detected_service = false
 
-      result = @commander.describe_services({
+      result = @cli.describe_services({
         cluster: cluster,
         services: [service]
       })
@@ -100,7 +100,7 @@ module EcsDeployer
         next unless svc[:service_name] == service
         detected_service = true
 
-        result = @commander.describe_task_definition({
+        result = @cli.describe_task_definition({
           task_definition: svc[:task_definition]
         })
 
@@ -114,7 +114,7 @@ module EcsDeployer
             wait_time += PAULING_INTERVAL
 
             # Get current tasks
-            result = @commander.list_tasks({
+            result = @cli.list_tasks({
               cluster: cluster,
               service_name: service,
               desired_status: 'RUNNING'
@@ -123,7 +123,7 @@ module EcsDeployer
             raise TaskNotFoundError.new('Desired count is 0.') if result[:task_arns].size == 0
 
             new_running_count = 0
-            result = @commander.describe_tasks({
+            result = @cli.describe_tasks({
               tasks: result[:task_arns],
               cluster: cluster
             })
