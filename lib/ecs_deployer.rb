@@ -7,5 +7,4 @@ module EcsDeployer
   class ServiceNotFoundError < EcsDeployer::Error; end
   class TaskNotFoundError < EcsDeployer::Error; end
   class DeployTimeoutError < EcsDeployer::Error; end
-  class CommandError < EcsDeployer::Error; end
 end

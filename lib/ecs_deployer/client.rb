@@ -2,7 +2,6 @@ require 'yaml'
 require 'oj'
 require 'aws-sdk'
 require 'runtime_command'
-require 'ecs_deployer/commander'
 
 module EcsDeployer
   class Client
@@ -15,8 +14,7 @@ module EcsDeployer
     # @option options [String] :region
     # @return [EcsDeployer::Client]
     def initialize(options = {})
-      @runtime = RuntimeCommand::Builder.new
-      @ecs_command = Commander.new(@runtime, options)
+      @command = RuntimeCommand::Builder.new
       @family = ''
       @revision = ''
       @new_task_definition_arn = ''
@@ -38,6 +36,7 @@ module EcsDeployer
       result = @commander.register_task_definition({
         container_definitions: task_hash[:container_definitions],
         family: task_hash[:family],
+        task_role_arn: task_hash[:task_role_arn]
       })
 
       @family = result[:task_definition][:family]
@@ -52,8 +51,8 @@ module EcsDeployer
       detected_service = false
 
       result = @commander.describe_services({
-        services: [service],
-        cluster: cluster
+        cluster: cluster,
+        services: [service]
       })
 
       result[:services].each do |svc|
@@ -77,17 +76,13 @@ module EcsDeployer
     # @param [Fixnum] timeout
     def update_service(cluster, service, wait = true, timeout = 600)
       register_clone_task(service) if @new_task_definition_arn.empty?
-      options = {
-        'cluster': cluster,
-        'task-definition': @family + ':' + @revision.to_s
-      }
-      @ecs_command.update_service(service, options)
-      wait_for_deploy(cluster, service, timeout) if wait
-    end
 
-    # @return [String]
-    def log
-      @ecs_command.log
+      @commander.update_service({
+        cluster: cluster,
+        service: service,
+        task_definition: @family + ':' + @revision.to_s
+      })
+      wait_for_deploy(cluster, service, timeout) if wait
     end
 
     private
@@ -97,53 +92,61 @@ module EcsDeployer
     def wait_for_deploy(cluster, service, timeout)
       detected_service = false
 
-      result = @commander.describe_services([service], { 'cluster': cluster })
-      result['services'].each do |svc|
-        next unless svc['serviceName'] == service
+      result = @commander.describe_services({
+        cluster: cluster,
+        services: [service]
+      })
+      result[:services].each do |svc|
+        next unless svc[:service_name] == service
         detected_service = true
 
-        result = @commander.describe_task_definition(svc['taskDefinition'])
+        result = @commander.describe_task_definition({
+          task_definition: svc[:task_definition]
+        })
 
-        if svc['desiredCount'] > 0
+        if svc[:desired_count] > 0
           running_new_task = false
           wait_time = 0
-          @runtime.puts 'Start deploing...'
+          @command.puts 'Start deploing...'
 
           begin
             sleep(PAULING_INTERVAL)
             wait_time += PAULING_INTERVAL
 
             # Get current tasks
-            options = {
-              'cluster': cluster,
-              'service-name': service,
-              'desired-status': 'RUNNING'
-            }
-            result = @ecs_command.list_tasks(options)
+            result = @commander.list_tasks({
+              cluster: cluster,
+              service_name: service,
+              desired_status: 'RUNNING'
+            })
 
-            raise TaskNotFoundError.new('Desired count is 0.') if result['taskArns'].size == 0
+            raise TaskNotFoundError.new('Desired count is 0.') if result[:task_arns].size == 0
 
             new_running_count = 0
-            result = @ecs_command.describe_tasks(result['taskArns'], { 'cluster': cluster })
+            result = @commander.describe_tasks({
+              tasks: result[:task_arns],
+              cluster: cluster
+            })
 
-            result['tasks'].each do |task|
-              new_running_count += 1 if @new_task_definition_arn == task['taskDefinitionArn']
+            result[:tasks].each do |task|
+              new_running_count += 1 if @new_task_definition_arn == task[:task_definition_arn]
             end
 
-            current_running_count = result['tasks'].size
+            current_running_count = result[:tasks].size
 
             if current_running_count == new_running_count
-              @runtime.puts "Service update succeeded. [#{new_running_count}/#{current_running_count}]"
-              @runtime.puts "New task definition: #{@new_task_definition_arn}"
+              @command.puts "Service update succeeded. [#{new_running_count}/#{current_running_count}]"
+              @command.puts "New task definition: #{@new_task_definition_arn}"
 
               running_new_task = true
 
             else
-              @runtime.puts "Deploying... [#{new_running_count}/#{current_running_count}] (#{wait_time} seconds elapsed)"
-              @runtime.puts 'You can stop process with Ctrl+C. Deployment will continue.'
+              @command.puts "Deploying... [#{new_running_count}/#{current_running_count}] (#{wait_time} seconds elapsed)"
+              @command.puts "New task: #{@new_task_definition_arn}"
+              @command.puts 'You can stop process with Ctrl+C. Deployment will continue.'
 
               if wait_time > timeout
-                @runtime.puts "New task definition: #{@new_task_definition_arn}"
+                @command.puts "New task definition: #{@new_task_definition_arn}"
                 raise DeployTimeoutError.new('Service is being updating, but process is timed out.')
               end
             end
