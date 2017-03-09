@@ -1,10 +1,14 @@
 require 'yaml'
+require 'oj'
+require 'aws-sdk'
 require 'runtime_command'
 require 'ecs_deployer/commander'
 
 module EcsDeployer
   class Client
     PAULING_INTERVAL = 20
+
+    attr_reader :commander
 
     # @param [Hash] options
     # @option options [String] :profile
@@ -16,6 +20,7 @@ module EcsDeployer
       @family = ''
       @revision = ''
       @new_task_definition_arn = ''
+      @commander = Aws::ECS::Client.new
     end
 
     # @param [String] task_path
@@ -28,11 +33,16 @@ module EcsDeployer
     # @param [Hash] task_hash
     # @return [String]
     def register_task_hash(task_hash)
-      result = @ecs_command.register_task_definition(task_hash['family'], task_hash['containerDefinitions'])
+      task_hash = Oj.load(Oj.dump(task_hash), symbol_keys: true)
 
-      @family = result['taskDefinition']['family']
-      @revision = result['taskDefinition']['revision']
-      @new_task_definition_arn = result['taskDefinition']['taskDefinitionArn']
+      result = @commander.register_task_definition({
+        container_definitions: task_hash[:container_definitions],
+        family: task_hash[:family],
+      })
+
+      @family = result[:task_definition][:family]
+      @revision = result[:task_definition][:revision]
+      @new_task_definition_arn = result[:task_definition][:task_definition_arn]
     end
 
     # @param [String] cluster
@@ -41,11 +51,17 @@ module EcsDeployer
     def register_clone_task(cluster, service)
       detected_service = false
 
-      result = @ecs_command.describe_services([service], { 'cluster': cluster })
-      result['services'].each do |svc|
-        if svc['serviceName'] == service
-          result = @ecs_command.describe_task_definition(svc['taskDefinition'])
-          @new_task_definition_arn = register_task_hash(result['taskDefinition'])
+      result = @commander.describe_services({
+        services: [service],
+        cluster: cluster
+      })
+
+      result[:services].each do |svc|
+        if svc[:service_name] == service
+          result = @commander.describe_task_definition({
+            task_definition: svc[:task_definition]
+          })
+          @new_task_definition_arn = register_task_hash(result[:task_definition])
           detected_service = true
           break
         end
@@ -81,12 +97,12 @@ module EcsDeployer
     def wait_for_deploy(cluster, service, timeout)
       detected_service = false
 
-      result = @ecs_command.describe_services([service], { 'cluster': cluster })
+      result = @commander.describe_services([service], { 'cluster': cluster })
       result['services'].each do |svc|
         next unless svc['serviceName'] == service
         detected_service = true
 
-        result = @ecs_command.describe_task_definition(svc['taskDefinition'])
+        result = @commander.describe_task_definition(svc['taskDefinition'])
 
         if svc['desiredCount'] > 0
           running_new_task = false

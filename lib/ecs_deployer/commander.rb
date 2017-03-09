@@ -32,32 +32,6 @@ module EcsDeployer
       exec('describe-tasks', options)
     end
 
-    # @param [String] task_definition
-    # @param [Hash] options
-    # @return [Hash]
-    def describe_task_definition(task_definition, options = {})
-      options['task-definition'] = task_definition
-      exec('describe-task-definition', options)
-    end
-
-    # @param [Array] services
-    # @param [Hash] options
-    # @return [Hash]
-    def describe_services(services, options = {})
-      options['services'] = services.join(' ')
-      exec('describe-services', options)
-    end
-
-    # @param [String] family
-    # @param [Hash] container_definitions
-    # @param [Hash] options
-    # @return [Hash]
-    def register_task_definition(family, container_definitions, options = {})
-      options['family'] = family
-      options['container-definitions'] = '"' + Oj.dump(container_definitions).gsub('"', '\\"') + '"'
-      exec('register-task-definition', options)
-    end
-
     # @return [String]
     def log
       @runtime.buffered_log
