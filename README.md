@@ -1,6 +1,6 @@
 # EcsDeployer
 
-This package provides the service deployment function of ECS.
+This package provides service deployment function of ECS.
 
 ## Installation
 
@@ -22,7 +22,7 @@ Or install it yourself as:
 
 Write task definition in YAML format.
 For available parameters see [Task Definition Parameters](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html).
-The sample file is in `example/fixtures/task.yml`.
+This sample file is in `example/fixtures/task.yml`.
 
 ```
 container_definitions:
@@ -46,6 +46,19 @@ container_definitions:
   essential: true
 family: hello_world
 ```
+
+### Encrypt of environment variables
+
+'environment' parameter supports KMS encrypted values.
+Encrypted values must be enclosed in '${XXX}'.
+
+```
+- environment:
+  - name: MYSQL_ROOT_PASSWORD
+    value: ${fiSAIfIFxd...}
+```
+
+Values are decrypted when task is created.
 
 ## Usage
 
