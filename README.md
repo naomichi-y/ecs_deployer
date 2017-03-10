@@ -22,7 +22,6 @@ Or install it yourself as:
 
 Write task definition in YAML format.
 For available parameters see [Task Definition Parameters](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html).
-This sample file is in `example/fixtures/task.yml`.
 
 ```
 container_definitions:
@@ -61,6 +60,8 @@ Encrypted values must be enclosed in `${XXX}`.
 Values are decrypted when task is created.
 
 ## Usage
+
+This sample file is in `example/fixtures/task.yml`.
 
 ```
 ecs_deployer = EcsDeployer::Client.new
