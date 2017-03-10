@@ -59,7 +59,7 @@ Encrypted values must be enclosed in `${XXX}`.
 
 Values are decrypted when task is created.
 
-## Usage
+## Usage (API)
 
 This sample file is in `example/fixtures/task.yml`.
 
@@ -67,4 +67,14 @@ This sample file is in `example/fixtures/task.yml`.
 ecs_deployer = EcsDeployer::Client.new
 ecs_deployer.register_task('development.yml')
 ecs_deployer.update_service('cluster', 'development')
+```
+
+## Usage (CLI)
+
+```
+# Register a new task
+bundle exec ecs_deployer task-register --path=example/fixtures/task.yml
+
+# Update a service
+bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --timeout=600
 ```

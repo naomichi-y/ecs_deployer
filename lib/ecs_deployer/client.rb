@@ -6,6 +6,7 @@ require 'runtime_command'
 module EcsDeployer
   class Client
     PAULING_INTERVAL = 20
+    DEPLOY_TIMEOUT = 600
 
     attr_reader :cli
 
@@ -76,15 +77,17 @@ module EcsDeployer
     # @param [String] cluster
     # @param [String] service
     # @param [Fixnum] timeout
-    def update_service(cluster, service, wait = true, timeout = 600)
+    # @return [String]
+    def update_service(cluster, service, wait = true, timeout = DEPLOY_TIMEOUT)
       register_clone_task(cluster, service) if @new_task_definition_arn.empty?
 
-      @cli.update_service({
+      result = @cli.update_service({
         cluster: cluster,
         service: service,
         task_definition: @family + ':' + @revision.to_s
       })
       wait_for_deploy(cluster, service, timeout) if wait
+      result.service.service_arn
     end
 
     private
