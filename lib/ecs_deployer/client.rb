@@ -62,7 +62,7 @@ module EcsDeployer
           result = @cli.describe_task_definition({
             task_definition: svc[:task_definition]
           })
-          @new_task_definition_arn = register_task_hash(result[:task_definition])
+          @new_task_definition_arn = register_task_hash(result[:task_definition].to_hash)
           detected_service = true
           break
         end
@@ -77,7 +77,7 @@ module EcsDeployer
     # @param [String] service
     # @param [Fixnum] timeout
     def update_service(cluster, service, wait = true, timeout = 600)
-      register_clone_task(service) if @new_task_definition_arn.empty?
+      register_clone_task(cluster, service) if @new_task_definition_arn.empty?
 
       @cli.update_service({
         cluster: cluster,
@@ -99,7 +99,7 @@ module EcsDeployer
             begin
               environment[:value] = @kms.decrypt(ciphertext_blob: Base64.strict_decode64(match[1])).plaintext
             rescue => e
-              raise KmsValidateError.new(e.to_s)
+              raise KmsDecryptError.new(e.to_s)
             end
           end
         end
