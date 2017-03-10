@@ -49,8 +49,8 @@ family: hello_world
 
 ### Encrypt of environment variables
 
-'environment' parameter supports KMS encrypted values.
-Encrypted values must be enclosed in '${XXX}'.
+`environment` parameter supports KMS encrypted values.
+Encrypted values must be enclosed in `${XXX}`.
 
 ```
 - environment:
