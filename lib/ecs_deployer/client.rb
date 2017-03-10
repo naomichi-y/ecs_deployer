@@ -10,29 +10,28 @@ module EcsDeployer
 
     attr_reader :cli
 
-    # @param [Hash] options
-    # @option options [String] :profile
-    # @option options [String] :region
+    # @param [Hash] aws_options
+    # @option aws_options [String] :profile
+    # @option aws_options [String] :region
     # @return [EcsDeployer::Client]
-    def initialize(options = {})
+    def initialize(aws_options = {})
       @command = RuntimeCommand::Builder.new
-      @family = ''
-      @revision = ''
-      @new_task_definition_arn = ''
-      @cli = Aws::ECS::Client.new(options)
-      @kms = Aws::KMS::Client.new(options)
+      @cli = Aws::ECS::Client.new(aws_options)
+      @kms = Aws::KMS::Client.new(aws_options)
     end
 
     # @param [String] path
     # @return [String]
     def register_task(path)
       raise IOError.new("File does not exist. [#{path}]") if !File.exist?(path)
+
       register_task_hash(YAML.load(File.read(path)))
     end
 
     # @param [Hash] task_definition
     # @return [String]
     def register_task_hash(task_definition)
+      puts '000'
       task_definition = Oj.load(Oj.dump(task_definition), symbol_keys: true)
       decrypt_environment_variables!(task_definition)
 
@@ -79,7 +78,7 @@ module EcsDeployer
     # @param [Fixnum] timeout
     # @return [String]
     def update_service(cluster, service, wait = true, timeout = DEPLOY_TIMEOUT)
-      register_clone_task(cluster, service) if @new_task_definition_arn.empty?
+      register_clone_task(cluster, service) if @new_task_definition_arn.nil?
 
       result = @cli.update_service({
         cluster: cluster,
