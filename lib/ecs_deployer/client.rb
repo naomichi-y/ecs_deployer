@@ -19,24 +19,26 @@ module EcsDeployer
       @revision = ''
       @new_task_definition_arn = ''
       @cli = Aws::ECS::Client.new(options)
+      @kms = Aws::KMS::Client.new(options)
     end
 
-    # @param [String] task_path
+    # @param [String] path
     # @return [String]
-    def register_task(task_path)
-      raise IOError.new("File does not exist. [#{task_path}]") if !File.exist?(task_path)
-      register_task_hash(YAML.load(File.read(task_path)))
+    def register_task(path)
+      raise IOError.new("File does not exist. [#{path}]") if !File.exist?(path)
+      register_task_hash(YAML.load(File.read(path)))
     end
 
-    # @param [Hash] task_hash
+    # @param [Hash] task_definition
     # @return [String]
-    def register_task_hash(task_hash)
-      task_hash = Oj.load(Oj.dump(task_hash), symbol_keys: true)
+    def register_task_hash(task_definition)
+      task_definition = Oj.load(Oj.dump(task_definition), symbol_keys: true)
+      decrypt_environment_variables!(task_definition)
 
       result = @cli.register_task_definition({
-        container_definitions: task_hash[:container_definitions],
-        family: task_hash[:family],
-        task_role_arn: task_hash[:task_role_arn]
+        container_definitions: task_definition[:container_definitions],
+        family: task_definition[:family],
+        task_role_arn: task_definition[:task_role_arn]
       })
 
       @family = result[:task_definition][:family]
@@ -86,6 +88,24 @@ module EcsDeployer
     end
 
     private
+    # @param [Hash] task_definition
+    def decrypt_environment_variables!(task_definition)
+      raise TaskDefinitionValidateError.new('\'container_definition\' is undefined.') unless task_definition.has_key?(:container_definitions)
+      task_definition[:container_definitions].each do |container_definition|
+        next unless container_definition.has_key?(:environment)
+
+        container_definition[:environment].each do |environment|
+          if match = environment[:value].match(/^\${(.+)}$/)
+            begin
+              environment[:value] = @kms.decrypt(ciphertext_blob: Base64.strict_decode64(match[1])).plaintext
+            rescue => e
+              raise KmsValidateError.new(e.to_s)
+            end
+          end
+        end
+      end
+    end
+
     # @param [String] cluster
     # @param [String] service
     # @param [Fixnum] timeout
