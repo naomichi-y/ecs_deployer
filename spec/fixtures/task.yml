@@ -9,7 +9,7 @@ container_definitions:
     host_port: 80
   memory: 500
   cpu: 10
-- environment:
+  environment:
   - name: MYSQL_ROOT_PASSWORD
     value: password
   name: mysql

@@ -31,7 +31,6 @@ module EcsDeployer
     # @param [Hash] task_definition
     # @return [String]
     def register_task_hash(task_definition)
-      puts '000'
       task_definition = Oj.load(Oj.dump(task_definition), symbol_keys: true)
       decrypt_environment_variables!(task_definition)
 
