@@ -71,10 +71,28 @@ ecs_deployer.update_service('cluster', 'development')
 
 ## Usage (CLI)
 
-```
-# Register a new task
-bundle exec ecs_deployer task-register --path=example/fixtures/task.yml
+### Register a new task
 
-# Update a service
-bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --timeout=600
+```
+$ bundle exec ecs_deployer task-register --path=example/fixtures/task.yml
+```
+
+### Encrypt environment value
+
+```
+$ bundle exec ecs_deployer encrypt --master-key=master --value='test'
+Encrypted value: ${xxx}
+```
+
+### Decrypt encironment value
+
+```
+$ bundle exec ecs_deployer decrypt --value='${xxx}'
+Decrypted value: xxx
+```
+
+### Update a service
+
+```
+$ bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --timeout=600
 ```

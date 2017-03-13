@@ -39,5 +39,18 @@ module EcsDeployer
 
       puts "Update service: #{result}"
     end
+
+    desc 'encrypt', 'Encrypt value of argument with KMS.'
+    option :master_key, required: true
+    option :value, required: true
+    def encrypt
+      puts "Encrypted value: #{@deployer.encrypt(options[:master_key], options[:value])}"
+    end
+
+    desc 'encrypt', 'Decrypt value of argument with KMS.'
+    option :value, required: true
+    def decrypt
+      puts "Decrypted value: #{@deployer.decrypt(options[:value])}"
+    end
   end
 end

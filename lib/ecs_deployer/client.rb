@@ -7,6 +7,7 @@ module EcsDeployer
   class Client
     PAULING_INTERVAL = 20
     DEPLOY_TIMEOUT = 600
+    ENCRYPT_PATTERN = /^\${(.+)}$/
 
     attr_reader :cli
 
@@ -18,6 +19,32 @@ module EcsDeployer
       @command = RuntimeCommand::Builder.new
       @cli = Aws::ECS::Client.new(aws_options)
       @kms = Aws::KMS::Client.new(aws_options)
+    end
+
+    # @param [String] mater_key
+    # @param [String] value
+    # @return [String]
+    def encrypt(master_key, value)
+      begin
+        encode = @kms.encrypt(key_id: "alias/#{master_key}", plaintext: value)
+        "${#{Base64.strict_encode64(encode.ciphertext_blob)}}"
+      rescue => e
+        raise KmsEncryptError.new(e.to_s)
+      end
+    end
+
+    # @param [String] value
+    # @return [String]
+    def decrypt(value)
+      if match = value.match(ENCRYPT_PATTERN)
+        begin
+          @kms.decrypt(ciphertext_blob: Base64.strict_decode64(match[1])).plaintext
+        rescue => e
+          raise KmsDecryptError.new(e.to_s)
+        end
+      else
+        raise KmsDecryptError.new('Encrypted string is invalid.')
+      end
     end
 
     # @param [String] path
@@ -96,12 +123,8 @@ module EcsDeployer
         next unless container_definition.has_key?(:environment)
 
         container_definition[:environment].each do |environment|
-          if match = environment[:value].match(/^\${(.+)}$/)
-            begin
-              environment[:value] = @kms.decrypt(ciphertext_blob: Base64.strict_decode64(match[1])).plaintext
-            rescue => e
-              raise KmsDecryptError.new(e.to_s)
-            end
+          if match = environment[:value].match(ENCRYPT_PATTERN)
+            environment[:value] = decrypt(match[0])
           end
         end
       end
