@@ -1,13 +1,13 @@
-require "spec_helper"
+require 'spec_helper'
 
 module EcsDeployer
   describe Client do
     let(:deployer) { EcsDeployer::Client.new }
-    let(:task_definition) { YAML::load(File.read('spec/fixtures/task.yml')) }
+    let(:task_definition) { YAML.load(File.read('spec/fixtures/task.yml')) }
     let(:task_definition_with_encrypt) {
       task_definition['container_definitions'][0]['environment'] += [
-        'name': 'ENCRYPT_KEY',
-        'value': '${ENCRYPT_VALUE}'
+        name: 'ENCRYPT_KEY',
+        value: '${ENCRYPT_VALUE}'
       ]
       task_definition
     }
@@ -42,7 +42,7 @@ module EcsDeployer
       context 'when invalid master key' do
         it 'should be return error' do
           allow(kms_mock).to receive(:encrypt).and_raise(RuntimeError)
-          expect{ deployer.encrypt('master_key', 'xxx') }.to raise_error(KmsEncryptError)
+          expect { deployer.encrypt('master_key', 'xxx') }.to raise_error(KmsEncryptError)
         end
       end
     end
@@ -62,13 +62,13 @@ module EcsDeployer
         context 'when valid value format' do
           it 'should be return error' do
             allow(kms_mock).to receive(:decrypt).and_raise(RuntimeError)
-            expect{ deployer.decrypt('${xxx}') }.to raise_error(KmsDecryptError)
+            expect { deployer.decrypt('${xxx}') }.to raise_error(KmsDecryptError)
           end
         end
 
         context 'when invalid value format' do
           it 'should be return error' do
-            expect{ deployer.decrypt('xxx') }.to raise_error(KmsDecryptError)
+            expect { deployer.decrypt('xxx') }.to raise_error(KmsDecryptError)
           end
         end
       end
@@ -87,20 +87,20 @@ module EcsDeployer
       context 'when file does not exist' do
         it 'shuld be return error' do
           allow(File).to receive(:exist?).and_return(false)
-          expect{ deployer.register_task(path) }.to raise_error(IOError)
+          expect { deployer.register_task(path) }.to raise_error(IOError)
         end
       end
     end
 
     describe 'register_task_hash' do
       it 'should be registered task definition' do
-        allow(deployer.cli).to receive(:register_task_definition).and_return({
+        allow(deployer.cli).to receive(:register_task_definition).and_return(
           task_definition: {
             family: 'family',
             revision: 'revision',
             task_definition_arn: 'new_task_definition_arn'
           }
-        })
+        )
 
         expect(deployer.register_task_hash(task_definition)).to eq('new_task_definition_arn')
         expect(deployer.instance_variable_get(:@family)).to eq('family')
@@ -111,14 +111,14 @@ module EcsDeployer
 
     describe 'register_clone_task' do
       before do
-        allow(deployer.cli).to receive(:describe_services).and_return({
+        allow(deployer.cli).to receive(:describe_services).and_return(
           services: [
             service_name: 'service'
           ]
-        })
-        allow(deployer.cli).to receive(:describe_task_definition).and_return({
+        )
+        allow(deployer.cli).to receive(:describe_task_definition).and_return(
           task_definition: {}
-        })
+        )
         allow(deployer).to receive(:register_task_hash).and_return('new_task_definition_arn')
       end
 
@@ -130,7 +130,7 @@ module EcsDeployer
 
       context 'when not find service' do
         it 'should be return error' do
-          expect{ deployer.register_clone_task('cluster', 'undefined') }.to raise_error(ServiceNotFoundError)
+          expect { deployer.register_clone_task('cluster', 'undefined') }.to raise_error(ServiceNotFoundError)
         end
       end
     end
@@ -167,7 +167,7 @@ module EcsDeployer
 
       context 'when invalid task definition' do
         it 'shuld be return error' do
-          expect{ deployer.send(:decrypt_environment_variables!, {}) }.to raise_error(TaskDefinitionValidateError)
+          expect { deployer.send(:decrypt_environment_variables!, {}) }.to raise_error(TaskDefinitionValidateError)
         end
       end
     end

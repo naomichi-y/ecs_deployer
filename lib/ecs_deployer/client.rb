@@ -26,32 +26,29 @@ module EcsDeployer
     # @param [String] value
     # @return [String]
     def encrypt(master_key, value)
-      begin
-        encode = @kms.encrypt(key_id: "alias/#{master_key}", plaintext: value)
-        "${#{Base64.strict_encode64(encode.ciphertext_blob)}}"
-      rescue => e
-        raise KmsEncryptError.new(e.to_s)
-      end
+      encode = @kms.encrypt(key_id: "alias/#{master_key}", plaintext: value)
+      "${#{Base64.strict_encode64(encode.ciphertext_blob)}}"
+    rescue => e
+      raise KmsEncryptError, e.to_s
     end
 
     # @param [String] value
     # @return [String]
     def decrypt(value)
-      if match = value.match(ENCRYPT_PATTERN)
-        begin
-          @kms.decrypt(ciphertext_blob: Base64.strict_decode64(match[1])).plaintext
-        rescue => e
-          raise KmsDecryptError.new(e.to_s)
-        end
-      else
-        raise KmsDecryptError.new('Encrypted string is invalid.')
+      match = value.match(ENCRYPT_PATTERN)
+      raise KmsDecryptError, 'Encrypted string is invalid.' unless match
+
+      begin
+        @kms.decrypt(ciphertext_blob: Base64.strict_decode64(match[1])).plaintext
+      rescue => e
+        raise KmsDecryptError, e.to_s
       end
     end
 
     # @param [String] path
     # @return [String]
     def register_task(path)
-      raise IOError.new("File does not exist. [#{path}]") if !File.exist?(path)
+      raise IOError, "File does not exist. [#{path}]" unless File.exist?(path)
 
       register_task_hash(YAML.load(File.read(path)))
     end
@@ -62,11 +59,11 @@ module EcsDeployer
       task_definition = Oj.load(Oj.dump(task_definition), symbol_keys: true)
       decrypt_environment_variables!(task_definition)
 
-      result = @cli.register_task_definition({
+      result = @cli.register_task_definition(
         container_definitions: task_definition[:container_definitions],
         family: task_definition[:family],
         task_role_arn: task_definition[:task_role_arn]
-      })
+      )
 
       @family = result[:task_definition][:family]
       @revision = result[:task_definition][:revision]
@@ -79,23 +76,23 @@ module EcsDeployer
     def register_clone_task(cluster, service)
       detected_service = false
 
-      result = @cli.describe_services({
+      result = @cli.describe_services(
         cluster: cluster,
         services: [service]
-      })
+      )
 
       result[:services].each do |svc|
-        if svc[:service_name] == service
-          result = @cli.describe_task_definition({
-            task_definition: svc[:task_definition]
-          })
-          @new_task_definition_arn = register_task_hash(result[:task_definition].to_hash)
-          detected_service = true
-          break
-        end
+        next unless svc[:service_name] == service
+
+        result = @cli.describe_task_definition(
+          task_definition: svc[:task_definition]
+        )
+        @new_task_definition_arn = register_task_hash(result[:task_definition].to_hash)
+        detected_service = true
+        break
       end
 
-      raise ServiceNotFoundError.new("'#{service}' service is not found.") unless detected_service
+      raise ServiceNotFoundError, "'#{service}' service is not found." unless detected_service
 
       @new_task_definition_arn
     end
@@ -107,26 +104,26 @@ module EcsDeployer
     def update_service(cluster, service, wait = true, timeout = DEPLOY_TIMEOUT)
       register_clone_task(cluster, service) if @new_task_definition_arn.nil?
 
-      result = @cli.update_service({
+      result = @cli.update_service(
         cluster: cluster,
         service: service,
         task_definition: @family + ':' + @revision.to_s
-      })
+      )
       wait_for_deploy(cluster, service, timeout) if wait
       result.service.service_arn
     end
 
     private
+
     # @param [Hash] task_definition
     def decrypt_environment_variables!(task_definition)
-      raise TaskDefinitionValidateError.new('\'container_definition\' is undefined.') unless task_definition.has_key?(:container_definitions)
+      raise TaskDefinitionValidateError, '\'container_definition\' is undefined.' unless task_definition.key?(:container_definitions)
       task_definition[:container_definitions].each do |container_definition|
-        next unless container_definition.has_key?(:environment)
+        next unless container_definition.key?(:environment)
 
         container_definition[:environment].each do |environment|
-          if match = environment[:value].match(ENCRYPT_PATTERN)
-            environment[:value] = decrypt(match[0])
-          end
+          match = environment[:value].match(ENCRYPT_PATTERN)
+          environment[:value] = decrypt(match[0]) if match
         end
       end
     end
@@ -137,41 +134,41 @@ module EcsDeployer
     def wait_for_deploy(cluster, service, timeout)
       detected_service = false
 
-      result = @cli.describe_services({
+      result = @cli.describe_services(
         cluster: cluster,
         services: [service]
-      })
+      )
       result[:services].each do |svc|
         next unless svc[:service_name] == service
         detected_service = true
 
-        result = @cli.describe_task_definition({
+        result = @cli.describe_task_definition(
           task_definition: svc[:task_definition]
-        })
+        )
 
         if svc[:desired_count] > 0
           running_new_task = false
           wait_time = 0
           @command.puts 'Start deploing...'
 
-          begin
+          loop do
             sleep(PAULING_INTERVAL)
             wait_time += PAULING_INTERVAL
 
             # Get current tasks
-            result = @cli.list_tasks({
+            result = @cli.list_tasks(
               cluster: cluster,
               service_name: service,
               desired_status: 'RUNNING'
-            })
+            )
 
-            raise TaskNotFoundError.new('Desired count is 0.') if result[:task_arns].size == 0
+            raise TaskNotFoundError, 'Desired count is 0.' if result[:task_arns].size.zero?
 
             new_running_count = 0
-            result = @cli.describe_tasks({
+            result = @cli.describe_tasks(
               tasks: result[:task_arns],
               cluster: cluster
-            })
+            )
 
             result[:tasks].each do |task|
               new_running_count += 1 if @new_task_definition_arn == task[:task_definition_arn]
@@ -192,16 +189,18 @@ module EcsDeployer
 
               if wait_time > timeout
                 @command.puts "New task definition: #{@new_task_definition_arn}"
-                raise DeployTimeoutError.new('Service is being updating, but process is timed out.')
+                raise DeployTimeoutError, 'Service is being updating, but process is timed out.'
               end
             end
-          end while !running_new_task
+
+            break running_new_task
+          end
         end
 
         break
       end
 
-      raise ServiceNotFoundError.new("'#{service}' service is not found.") unless detected_service
+      raise ServiceNotFoundError, "'#{service}' service is not found." unless detected_service
     end
   end
 end
