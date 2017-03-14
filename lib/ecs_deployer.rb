@@ -5,7 +5,7 @@ require 'ecs_deployer/cli'
 
 module EcsDeployer
   class ServiceNotFoundError < EcsDeployer::Error; end
-  class TaskNotFoundError < EcsDeployer::Error; end
+  class TaskRunningError < EcsDeployer::Error; end
   class TaskDefinitionValidateError < EcsDeployer::Error; end
   class TaskDesiredError < EcsDeployer::Error; end
   class KmsEncryptError < EcsDeployer::Error; end

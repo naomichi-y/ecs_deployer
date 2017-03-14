@@ -160,7 +160,7 @@ module EcsDeployer
         desired_status: 'RUNNING'
       )
 
-      raise TaskNotFoundError, 'Desired count is 0.' if result[:task_arns].size.zero?
+      raise TaskRunningError, 'Running task not found.' if result[:task_arns].size.zero?
 
       result = @cli.describe_tasks(
         cluster: cluster,
