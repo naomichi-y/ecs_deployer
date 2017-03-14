@@ -11,6 +11,13 @@ module EcsDeployer
       ]
       task_definition
     }
+    let(:ecs_mock) { double('Aws::ECS::Client') }
+    let(:kms_mock) { double('Aws::KMS::Client') }
+
+    before do
+      allow(Aws::ECS::Client).to receive(:new).and_return(ecs_mock)
+      allow(Aws::KMS::Client).to receive(:new).and_return(kms_mock)
+    end
 
     describe 'initialize' do
       it 'should be return instance' do
@@ -18,7 +25,7 @@ module EcsDeployer
       end
 
       it 'should be return Aws::ECS::Client' do
-        expect(deployer.cli).to be_a(Aws::ECS::Client)
+        expect(deployer.cli).to be_a(RSpec::Mocks::Double)
       end
     end
 
@@ -27,14 +34,14 @@ module EcsDeployer
         let(:encrypt_response) { Aws::KMS::Types::EncryptResponse.new(ciphertext_blob: 'encrypted_value') }
 
         it 'should be return encrypted value' do
-          allow_any_instance_of(Aws::KMS::Client).to receive(:encrypt).and_return(encrypt_response)
+          allow(kms_mock).to receive(:encrypt).and_return(encrypt_response)
           expect(deployer.encrypt('master_key', 'xxx')).to eq('${ZW5jcnlwdGVkX3ZhbHVl}')
         end
       end
 
       context 'when invalid master key' do
         it 'should be return error' do
-          allow_any_instance_of(Aws::KMS::Client).to receive(:encrypt).and_raise(RuntimeError)
+          allow(kms_mock).to receive(:encrypt).and_raise(RuntimeError)
           expect{ deployer.encrypt('master_key', 'xxx') }.to raise_error(KmsEncryptError)
         end
       end
@@ -46,7 +53,7 @@ module EcsDeployer
 
         it 'should be return encrypted value' do
           allow(Base64).to receive(:strict_decode64)
-          allow_any_instance_of(Aws::KMS::Client).to receive(:decrypt).and_return(decrypt_response)
+          allow(kms_mock).to receive(:decrypt).and_return(decrypt_response)
           expect(deployer.decrypt('${xxx}')).to eq('decrypted_value')
         end
       end
@@ -54,7 +61,7 @@ module EcsDeployer
       context 'when invalid encrypted value' do
         context 'when valid value format' do
           it 'should be return error' do
-            allow_any_instance_of(Aws::KMS::Client).to receive(:decrypt).and_raise(RuntimeError)
+            allow(kms_mock).to receive(:decrypt).and_raise(RuntimeError)
             expect{ deployer.decrypt('${xxx}') }.to raise_error(KmsDecryptError)
           end
         end
@@ -137,7 +144,7 @@ module EcsDeployer
 
           it 'shuld be return decrypted values' do
             allow(Base64).to receive(:strict_decode64)
-            allow_any_instance_of(Aws::KMS::Client).to receive(:decrypt).and_return(decrypt_response)
+            allow(kms_mock).to receive(:decrypt).and_return(decrypt_response)
 
             deployer.send(:decrypt_environment_variables!, task_definition_hash_clone)
             expect(task_definition_hash_clone.to_json)

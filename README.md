@@ -93,7 +93,7 @@ $ bundle exec ecs_deployer decrypt --value='${xxx}'
 Decrypted value: xxx
 ```
 
-#### Update a service
+#### Update service
 
 ```
 $ bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --timeout=600

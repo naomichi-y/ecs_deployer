@@ -2,6 +2,7 @@ require 'yaml'
 require 'oj'
 require 'aws-sdk'
 require 'runtime_command'
+require 'base64'
 
 module EcsDeployer
   class Client
