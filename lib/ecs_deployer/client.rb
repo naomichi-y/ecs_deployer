@@ -6,6 +6,7 @@ require 'base64'
 
 module EcsDeployer
   class Client
+    LOG_SEPARATOR = '-' * 96
     PAULING_INTERVAL = 20
     DEPLOY_TIMEOUT = 600
     ENCRYPT_PATTERN = /^\${(.+)}$/
@@ -130,77 +131,92 @@ module EcsDeployer
 
     # @param [String] cluster
     # @param [String] service
-    # @param [Fixnum] timeout
-    def wait_for_deploy(cluster, service, timeout)
-      detected_service = false
-
+    # @return [Aws::ECS::Types::Service]
+    def service_status(cluster, service)
+      status = nil
       result = @cli.describe_services(
         cluster: cluster,
         services: [service]
       )
       result[:services].each do |svc|
         next unless svc[:service_name] == service
-        detected_service = true
-
-        result = @cli.describe_task_definition(
-          task_definition: svc[:task_definition]
-        )
-
-        if svc[:desired_count] > 0
-          running_new_task = false
-          wait_time = 0
-          @command.puts 'Start deploing...'
-
-          loop do
-            sleep(PAULING_INTERVAL)
-            wait_time += PAULING_INTERVAL
-
-            # Get current tasks
-            result = @cli.list_tasks(
-              cluster: cluster,
-              service_name: service,
-              desired_status: 'RUNNING'
-            )
-
-            raise TaskNotFoundError, 'Desired count is 0.' if result[:task_arns].size.zero?
-
-            new_running_count = 0
-            result = @cli.describe_tasks(
-              tasks: result[:task_arns],
-              cluster: cluster
-            )
-
-            result[:tasks].each do |task|
-              new_running_count += 1 if @new_task_definition_arn == task[:task_definition_arn]
-            end
-
-            current_running_count = result[:tasks].size
-
-            if current_running_count == new_running_count
-              @command.puts "Service update succeeded. [#{new_running_count}/#{current_running_count}]"
-              @command.puts "New task definition: #{@new_task_definition_arn}"
-
-              running_new_task = true
-
-            else
-              @command.puts "Deploying... [#{new_running_count}/#{current_running_count}] (#{wait_time} seconds elapsed)"
-              @command.puts "New task: #{@new_task_definition_arn}"
-              @command.puts 'You can stop process with Ctrl+C. Deployment will continue.'
-
-              if wait_time > timeout
-                @command.puts "New task definition: #{@new_task_definition_arn}"
-                raise DeployTimeoutError, 'Service is being updating, but process is timed out.'
-              end
-            end
-
-            break running_new_task
-          end
-        end
-
+        status = svc
         break
       end
 
-      raise ServiceNotFoundError, "'#{service}' service is not found." unless detected_service
+      raise ServiceNotFoundError, "'#{service}' service is not found." if status.nil?
+
+      status
+    end
+
+    # @param [String] cluster
+    # @param [String] service
+    # @return [Hash]
+    def deploy_status(cluster, service)
+      # Get current tasks
+      result = @cli.list_tasks(
+        cluster: cluster,
+        service_name: service,
+        desired_status: 'RUNNING'
+      )
+
+      raise TaskNotFoundError, 'Desired count is 0.' if result[:task_arns].size.zero?
+
+      result = @cli.describe_tasks(
+        cluster: cluster,
+        tasks: result[:task_arns]
+      )
+
+      new_running_count = 0
+      task_status_logs = ''
+
+      result[:tasks].each do |task|
+        new_running_count += 1 if @new_task_definition_arn == task[:task_definition_arn]
+        task_status_logs << "  #{task[:task_definition_arn]} [#{task[:last_status]}]\n"
+      end
+
+      {
+        current_running_count: result[:tasks].size,
+        new_running_count: new_running_count,
+        task_status_logs: task_status_logs
+      }
+    end
+
+    # @param [String] cluster
+    # @param [String] service
+    # @param [Fixnum] timeout
+    def wait_for_deploy(cluster, service, timeout)
+      service_status = service_status(cluster, service)
+      raise TaskDesiredError, 'Task desired by service is 0.' if service_status[:desired_count].zero?
+
+      wait_time = 0
+      @command.puts 'Start deploing...'
+
+      loop do
+        sleep(PAULING_INTERVAL)
+        wait_time += PAULING_INTERVAL
+        result = deploy_status(cluster, service)
+
+        if result[:new_running_count] == result[:current_running_count]
+          @command.puts "Service update succeeded. [#{result[:new_running_count]}/#{result[:current_running_count]}]"
+          @command.puts "New task definition: #{@new_task_definition_arn}"
+
+          break
+
+        else
+          @command.puts "Deploying... [#{result[:new_running_count]}/#{result[:current_running_count]}] (#{wait_time} seconds elapsed)"
+          @command.puts "New task: #{@new_task_definition_arn}"
+          @command.puts LOG_SEPARATOR
+          @command.puts result[:task_status_logs]
+          @command.puts LOG_SEPARATOR
+          @command.puts 'You can stop process with Ctrl+C. Deployment will continue.'
+
+          if wait_time > timeout
+            @command.puts "New task definition: #{@new_task_definition_arn}"
+            raise DeployTimeoutError, 'Service is being updating, but process is timed out.'
+          end
+        end
+      end
     end
   end
 end
