@@ -102,6 +102,32 @@ module EcsDeployer
       end
     end
 
+    describe 'register_clone_task' do
+      before do
+        allow(deployer.cli).to receive(:describe_services).and_return({
+          services: [
+            service_name: 'service'
+          ]
+        })
+        allow(deployer.cli).to receive(:describe_task_definition).and_return({
+          task_definition: {}
+        })
+        allow(deployer).to receive(:register_task_hash).and_return('new_task_definition_arn')
+      end
+
+      context 'when find service' do
+        it 'should be return new task definition arn' do
+          expect(deployer.register_clone_task('cluster', 'service')).to eq('new_task_definition_arn')
+        end
+      end
+
+      context 'when not find service' do
+        it 'should be return error' do
+          expect{ deployer.register_clone_task('cluster', 'undefined') }.to raise_error(ServiceNotFoundError)
+        end
+      end
+    end
+
     describe 'decrypt_environment_variables!' do
       context 'when valid task definition' do
         context 'when exist environment parameter' do

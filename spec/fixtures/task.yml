@@ -12,7 +12,7 @@ container_definitions:
   environment:
   - name: MYSQL_ROOT_PASSWORD
     value: password
-  name: mysql
+- name: mysql
   image: mysql
   cpu: 10
   memory: 500
