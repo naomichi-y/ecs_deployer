@@ -59,9 +59,11 @@ Encrypted values must be enclosed in `${XXX}`.
 
 Values are decrypted when task is created.
 
-## Usage (API)
+## Usage
 
-This sample file is in `example/fixtures/task.yml`.
+### API
+
+This sample file is in `spec/fixtures/task.yml`.
 
 ```
 ecs_deployer = EcsDeployer::Client.new
@@ -69,29 +71,29 @@ ecs_deployer.register_task('development.yml')
 ecs_deployer.update_service('cluster', 'development')
 ```
 
-## Usage (CLI)
+### CLI
 
-### Register a new task
+#### Register new task
 
 ```
 $ bundle exec ecs_deployer task-register --path=example/fixtures/task.yml
 ```
 
-### Encrypt environment value
+#### Encrypt environment value
 
 ```
 $ bundle exec ecs_deployer encrypt --master-key=master --value='test'
 Encrypted value: ${xxx}
 ```
 
-### Decrypt encironment value
+#### Decrypt encironment value
 
 ```
 $ bundle exec ecs_deployer decrypt --value='${xxx}'
 Decrypted value: xxx
 ```
 
-### Update a service
+#### Update a service
 
 ```
 $ bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --timeout=600
