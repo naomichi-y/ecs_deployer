@@ -4,13 +4,13 @@ module EcsDeployer
   describe Client do
     let(:deployer) { EcsDeployer::Client.new }
     let(:task_definition) { YAML.load(File.read('spec/fixtures/task.yml')) }
-    let(:task_definition_with_encrypt) {
+    let(:task_definition_with_encrypt) do
       task_definition['container_definitions'][0]['environment'] += [
         name: 'ENCRYPT_KEY',
         value: '${ENCRYPT_VALUE}'
       ]
       task_definition
-    }
+    end
     let(:ecs_mock) { double('Aws::ECS::Client') }
     let(:kms_mock) { double('Aws::KMS::Client') }
 

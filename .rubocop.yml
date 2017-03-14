@@ -15,3 +15,5 @@ Metrics/ModuleLength:
   Enabled: false
 Security/YAMLLoad:
   Enabled: false
+Style/SpaceAroundOperators:
+  Enabled: false
