@@ -2,6 +2,8 @@ Style/Documentation:
   Enabled: false
 Style/ExtraSpacing:
   Enabled: false
+Metrics/AbcSize:
+  Max: 20
 Metrics/BlockLength:
   Enabled: false
 Metrics/ClassLength:

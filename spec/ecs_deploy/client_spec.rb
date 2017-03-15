@@ -135,6 +135,9 @@ module EcsDeployer
       end
     end
 
+    describe 'update_service' do
+    end
+
     describe 'decrypt_environment_variables!' do
       context 'when valid task definition' do
         context 'when exist environment parameter' do
@@ -170,6 +173,9 @@ module EcsDeployer
           expect { deployer.send(:decrypt_environment_variables!, {}) }.to raise_error(TaskDefinitionValidateError)
         end
       end
+    end
+
+    describe 'service_status' do
     end
   end
 end
