@@ -1,6 +1,11 @@
+AllCops:
+  Exclude:
+    - 'tmp/**/*'
 Style/Documentation:
   Enabled: false
 Style/ExtraSpacing:
+  Enabled: false
+Style/FrozenStringLiteralComment:
   Enabled: false
 Metrics/AbcSize:
   Max: 20
