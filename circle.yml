@@ -1,6 +1,4 @@
 machine:
-  timezone:
-    Asia/Tokyo
   ruby:
     version:
-      2.4.0
+      2.3.0
