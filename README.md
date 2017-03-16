@@ -1,6 +1,7 @@
 # EcsDeployer
 
 [![CircleCI](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master.svg?style=svg)](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master)
+[![Gem Version](https://badge.fury.io/rb/ecs_deployer.svg)](https://badge.fury.io/rb/ecs_deployer)
 
 ## Description
 
