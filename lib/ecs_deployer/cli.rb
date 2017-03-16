@@ -33,13 +33,13 @@ module EcsDeployer
     option :cluster, required: true
     option :service, required: true
     option :wait, type: :boolean, default: true
-    option :timeout, type: :numeric, default: EcsDeployer::Client::DEPLOY_TIMEOUT
+    option :timeout, type: :numeric, default: 600
     def update_service
+      @deployer.timeout = options[:timeout]
       result = @deployer.update_service(
         options[:cluster],
         options[:service],
-        options[:wait],
-        options[:timeout]
+        options[:wait]
       )
 
       puts "Update service: #{result}"

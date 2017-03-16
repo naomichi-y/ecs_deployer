@@ -7,11 +7,10 @@ require 'base64'
 module EcsDeployer
   class Client
     LOG_SEPARATOR = '-' * 96
-    PAULING_INTERVAL = 20
-    DEPLOY_TIMEOUT = 600
     ENCRYPT_PATTERN = /^\${(.+)}$/
 
     attr_reader :cli
+    attr_accessor :timeout, :pauling_interval
 
     # @param [Hash] aws_options
     # @option aws_options [String] :profile
@@ -21,6 +20,8 @@ module EcsDeployer
       @command = RuntimeCommand::Builder.new
       @cli = Aws::ECS::Client.new(aws_options)
       @kms = Aws::KMS::Client.new(aws_options)
+      @timeout = 600
+      @pauling_interval = 20
     end
 
     # @param [String] mater_key
@@ -100,9 +101,8 @@ module EcsDeployer
 
     # @param [String] cluster
     # @param [String] service
-    # @param [Fixnum] timeout
     # @return [String]
-    def update_service(cluster, service, wait = true, timeout = DEPLOY_TIMEOUT)
+    def update_service(cluster, service, wait = true)
       register_clone_task(cluster, service) if @new_task_definition_arn.nil?
 
       result = @cli.update_service(
@@ -110,7 +110,7 @@ module EcsDeployer
         service: service,
         task_definition: @family + ':' + @revision.to_s
       )
-      wait_for_deploy(cluster, service, timeout) if wait
+      wait_for_deploy(cluster, service) if wait
       result.service.service_arn
     end
 
@@ -184,8 +184,7 @@ module EcsDeployer
 
     # @param [String] cluster
     # @param [String] service
-    # @param [Fixnum] timeout
-    def wait_for_deploy(cluster, service, timeout)
+    def wait_for_deploy(cluster, service)
       service_status = service_status(cluster, service)
       raise TaskDesiredError, 'Task desired by service is 0.' if service_status[:desired_count].zero?
 
@@ -193,8 +192,8 @@ module EcsDeployer
       @command.puts 'Start deploing...'
 
       loop do
-        sleep(PAULING_INTERVAL)
-        wait_time += PAULING_INTERVAL
+        sleep(@pauling_interval)
+        wait_time += @pauling_interval
         result = deploy_status(cluster, service)
 
         if result[:new_running_count] == result[:current_running_count]
@@ -211,7 +210,7 @@ module EcsDeployer
           @command.puts LOG_SEPARATOR
           @command.puts 'You can stop process with Ctrl+C. Deployment will continue.'
 
-          if wait_time > timeout
+          if wait_time > @timeout
             @command.puts "New task definition: #{@new_task_definition_arn}"
             raise DeployTimeoutError, 'Service is being updating, but process is timed out.'
           end
