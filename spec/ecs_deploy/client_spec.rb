@@ -135,6 +135,41 @@ module EcsDeployer
       end
     end
 
+    describe 'update_service' do
+      before do
+        allow(deployer).to receive(:register_clone_task) do
+          deployer.instance_variable_set(:@new_task_definition_arn, 'new_task_definition_arn')
+          deployer.instance_variable_set(:@family, 'family')
+          deployer.instance_variable_set(:@revision, 'revision')
+        end
+
+        allow(deployer.cli).to receive(:update_service).and_return(
+          Aws::ECS::Types::UpdateServiceResponse.new(
+            service: Aws::ECS::Types::Service.new(
+              service_arn: 'service_arn'
+            )
+          )
+        )
+        allow(deployer).to receive(:wait_for_deploy)
+      end
+
+      context 'when wait is true' do
+        it 'should be return service arn' do
+          expect(deployer.update_service('cluster', 'service', true)).to eq('service_arn')
+          expect(deployer).to have_received(:register_clone_task)
+          expect(deployer).to have_received(:wait_for_deploy)
+        end
+      end
+
+      context 'when wait is false' do
+        it 'should be return service arn' do
+          expect(deployer.update_service('cluster', 'service', false)).to eq('service_arn')
+          expect(deployer).to have_received(:register_clone_task)
+          expect(deployer).to_not have_received(:wait_for_deploy)
+        end
+      end
+    end
+
     describe 'decrypt_environment_variables!' do
       context 'when valid task definition' do
         context 'when exist environment parameter' do
