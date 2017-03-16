@@ -5,14 +5,19 @@ module EcsDeployer
     class_option :profile, type: :string
     class_option :region, type: :string
 
-    def initialize(*args)
-      super
+    no_commands do
+      def prepare
+        aws_options = {}
+        aws_options[:profile] = options[:profile] if options[:profile]
+        aws_options[:region] = options[:region] if options[:region]
 
-      aws_options = {}
-      aws_options[:profile] = options[:profile] if options[:profile]
-      aws_options[:region] = options[:region] if options[:region]
+        @deployer = EcsDeployer::Client.new(aws_options)
+      end
 
-      @deployer = EcsDeployer::Client.new(aws_options)
+      def invoke_command(command, *args)
+        prepare
+        super
+      end
     end
 
     desc 'task_register', 'Create new task definition'
