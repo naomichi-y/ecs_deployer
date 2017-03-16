@@ -1,6 +1,3 @@
-require 'bundler/setup'
-require 'ecs_deployer'
-require 'json_spec'
 require 'simplecov'
 
 if ENV['CIRCLE_ARTIFACTS']
@@ -9,6 +6,10 @@ if ENV['CIRCLE_ARTIFACTS']
 end
 
 SimpleCov.start
+
+require 'bundler/setup'
+require 'json_spec'
+require 'ecs_deployer'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
