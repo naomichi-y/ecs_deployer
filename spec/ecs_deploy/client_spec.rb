@@ -206,5 +206,8 @@ module EcsDeployer
         end
       end
     end
+
+    describe 'service_status' do
+    end
   end
 end
