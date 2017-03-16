@@ -208,6 +208,25 @@ module EcsDeployer
     end
 
     describe 'service_status' do
+      before do
+        allow(deployer.cli).to receive(:describe_services).and_return(
+          Aws::ECS::Types::DescribeServicesResponse.new(
+            services: [Aws::ECS::Types::Service.new(service_name: 'service_name')]
+          )
+        )
+      end
+
+      context 'when exist service' do
+        it 'should be return Aws::ECS::Types::Service' do
+          expect(deployer.send(:service_status, 'cluster', 'service_name')).to be_a(Aws::ECS::Types::Service)
+        end
+      end
+
+      context 'when not exist service' do
+        it 'should be return error' do
+          expect { deployer.send(:service_status, 'cluster', 'undefined') }.to raise_error(ServiceNotFoundError)
+        end
+      end
     end
   end
 end
