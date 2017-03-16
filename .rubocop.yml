@@ -1,6 +1,3 @@
-AllCops:
-  Exclude:
-  - 'tmp/**/*'
 Style/BlockComments:
   Enabled: false
 Style/Documentation:
