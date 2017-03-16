@@ -1,6 +1,8 @@
 AllCops:
   Exclude:
-    - 'tmp/**/*'
+  ¦ - 'tmp/**/*'
+Style/BlockComments:
+  Enabled: false
 Style/Documentation:
   Enabled: false
 Style/ExtraSpacing:
@@ -8,7 +10,7 @@ Style/ExtraSpacing:
 Style/FrozenStringLiteralComment:
   Enabled: false
 Metrics/AbcSize:
-  Max: 20
+  Max: 64
 Metrics/BlockLength:
   Enabled: false
 Metrics/ClassLength:
