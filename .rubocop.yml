@@ -1,6 +1,6 @@
 AllCops:
   Exclude:
-  ¦ - 'tmp/**/*'
+  - 'tmp/**/*'
 Style/BlockComments:
   Enabled: false
 Style/Documentation:
