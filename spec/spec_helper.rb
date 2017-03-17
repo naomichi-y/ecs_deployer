@@ -5,7 +5,9 @@ if ENV['CIRCLE_ARTIFACTS']
   SimpleCov.coverage_dir(dir)
 end
 
-SimpleCov.start
+SimpleCov.start do
+  coverage_dir 'tmp/coverage'
+end
 
 require 'bundler/setup'
 require 'json_spec'
