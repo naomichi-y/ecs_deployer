@@ -12,6 +12,8 @@ module EcsDeployer
         aws_options[:region] = options[:region] if options[:region]
 
         @deployer = EcsDeployer::Client.new(aws_options)
+
+        nil
       end
 
       def invoke_command(command, *args)
