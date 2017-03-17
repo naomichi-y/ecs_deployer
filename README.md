@@ -17,11 +17,15 @@ gem 'ecs_deployer'
 
 And then execute:
 
-    $ bundle
+```
+$ bundle
+```
 
 Or install it yourself as:
 
-    $ gem install ecs_deployer
+```
+$ gem install ecs_deployer
+```
 
 ## Task definition
 
