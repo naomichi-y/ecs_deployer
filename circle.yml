@@ -1,4 +1,4 @@
 test:
   override:
     - bundle exec rspec
-    - bundle exec codeclimate-test-reporter
+    - bundle exec codeclimate-test-reporter tmp/coverage/.resultset.json
