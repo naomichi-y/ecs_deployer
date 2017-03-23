@@ -15,9 +15,10 @@ module EcsDeployer
     # @param [Hash] aws_options
     # @option aws_options [String] :profile
     # @option aws_options [String] :region
+    # @param [RuntimeCommand::Builder] runtime
     # @return [EcsDeployer::Client]
-    def initialize(aws_options = {})
-      @command = RuntimeCommand::Builder.new
+    def initialize(aws_options = {}, runtime = nil)
+      @runtime = runtime || RuntimeCommand::Builder.new
       @cli = Aws::ECS::Client.new(aws_options)
       @kms = Aws::KMS::Client.new(aws_options)
       @timeout = 600
@@ -189,7 +190,7 @@ module EcsDeployer
       raise TaskDesiredError, 'Task desired by service is 0.' if service_status[:desired_count].zero?
 
       wait_time = 0
-      @command.puts 'Start deploing...'
+      @runtime.puts 'Start deploing...'
 
       loop do
         sleep(@pauling_interval)
@@ -197,21 +198,21 @@ module EcsDeployer
         result = deploy_status(cluster, service)
 
         if result[:new_running_count] == result[:current_running_count]
-          @command.puts "Service update succeeded. [#{result[:new_running_count]}/#{result[:current_running_count]}]"
-          @command.puts "New task definition: #{@new_task_definition_arn}"
+          @runtime.puts "Service update succeeded. [#{result[:new_running_count]}/#{result[:current_running_count]}]"
+          @runtime.puts "New task definition: #{@new_task_definition_arn}"
 
           break
 
         else
-          @command.puts "Deploying... [#{result[:new_running_count]}/#{result[:current_running_count]}] (#{wait_time} seconds elapsed)"
-          @command.puts "New task: #{@new_task_definition_arn}"
-          @command.puts LOG_SEPARATOR
-          @command.puts result[:task_status_logs]
-          @command.puts LOG_SEPARATOR
-          @command.puts 'You can stop process with Ctrl+C. Deployment will continue.'
+          @runtime.puts "Deploying... [#{result[:new_running_count]}/#{result[:current_running_count]}] (#{wait_time} seconds elapsed)"
+          @runtime.puts "New task: #{@new_task_definition_arn}"
+          @runtime.puts LOG_SEPARATOR
+          @runtime.puts result[:task_status_logs]
+          @runtime.puts LOG_SEPARATOR
+          @runtime.puts 'You can stop process with Ctrl+C. Deployment will continue.'
 
           if wait_time > @timeout
-            @command.puts "New task definition: #{@new_task_definition_arn}"
+            @runtime.puts "New task definition: #{@new_task_definition_arn}"
             raise DeployTimeoutError, 'Service is being updating, but process is timed out.'
           end
         end
