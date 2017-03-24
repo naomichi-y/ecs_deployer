@@ -44,7 +44,7 @@ container_definitions:
   port_mappings:
   - container_port: 80
     hostPort: 80
-  memory: 500
+  memory: 512
   cpu: 10
 - environment:
   - name: MYSQL_ROOT_PASSWORD
@@ -52,7 +52,7 @@ container_definitions:
   name: mysql
   image: mysql
   cpu: 10
-  memory: 500
+  memory: 512
   essential: true
 family: hello_world
 ```
@@ -77,9 +77,9 @@ Values are decrypted when task is created.
 This sample file is in `spec/fixtures/task.yml`.
 
 ```
-ecs_deployer = EcsDeployer::Client.new
-ecs_deployer.register_task('development.yml')
-ecs_deployer.update_service('cluster', 'development')
+deployer = EcsDeployer::Client.new
+deployer.register_task('development.yml')
+deployer.update_service('cluster', 'development')
 ```
 
 ### CLI
@@ -97,7 +97,7 @@ $ bundle exec ecs_deployer encrypt --master-key=master --value='test'
 Encrypted value: ${xxx}
 ```
 
-#### Decrypt encironment value
+#### Decrypt environment value
 
 ```
 $ bundle exec ecs_deployer decrypt --value='${xxx}'

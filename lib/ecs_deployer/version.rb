@@ -1,3 +1,3 @@
 module EcsDeployer
-  VERSION = '0.1.14'.freeze
+  VERSION = '1.0.0'.freeze
 end

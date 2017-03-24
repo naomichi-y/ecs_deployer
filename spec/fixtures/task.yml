@@ -7,7 +7,7 @@ container_definitions:
   port_mappings:
   - container_port: 80
     host_port: 80
-  memory: 500
+  memory: 512
   cpu: 10
   environment:
   - name: MYSQL_ROOT_PASSWORD
@@ -15,6 +15,6 @@ container_definitions:
 - name: mysql
   image: mysql
   cpu: 10
-  memory: 500
+  memory: 512
   essential: true
 family: hello_world
