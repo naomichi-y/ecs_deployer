@@ -190,7 +190,7 @@ module EcsDeployer
       raise TaskDesiredError, 'Task desired by service is 0.' if service_status[:desired_count].zero?
 
       wait_time = 0
-      @runtime.puts 'Start deploing...'
+      @runtime.puts 'Start deploying...'
 
       loop do
         sleep(@pauling_interval)
