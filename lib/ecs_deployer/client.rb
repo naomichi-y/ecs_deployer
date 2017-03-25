@@ -13,12 +13,10 @@ module EcsDeployer
     attr_accessor :timeout, :pauling_interval
 
     # @param [Hash] aws_options
-    # @option aws_options [String] :profile
-    # @option aws_options [String] :region
-    # @param [RuntimeCommand::Builder] runtime
+    # @param [Hash] runtime_options
     # @return [EcsDeployer::Client]
-    def initialize(aws_options = {}, runtime = nil)
-      @runtime = runtime || RuntimeCommand::Builder.new
+    def initialize(aws_options = {}, runtime_options = {})
+      @runtime = RuntimeCommand::Builder.new(runtime_options)
       @cli = Aws::ECS::Client.new(aws_options)
       @kms = Aws::KMS::Client.new(aws_options)
       @timeout = 600
