@@ -47,19 +47,25 @@ module EcsDeployer
     end
 
     # @param [String] path
+    # @param [Hash] params
     # @return [String]
-    def register_task(path)
+    def register_task(path, params = {})
       raise IOError, "File does not exist. [#{path}]" unless File.exist?(path)
 
-      register_task_hash(YAML.load(File.read(path)))
+      register_task_hash(YAML.load(File.read(path)), params)
     end
 
     # @param [Hash] task_definition
+    # @param [Hash] params
     # @return [String]
-    def register_task_hash(task_definition)
+    def register_task_hash(task_definition, replace_variables = {})
       task_definition = Oj.load(Oj.dump(task_definition), symbol_keys: true)
+
+      replace_parameter_variables!(task_definition, replace_variables)
       decrypt_environment_variables!(task_definition)
 
+puts task_definition
+exit
       result = @cli.register_task_definition(
         container_definitions: task_definition[:container_definitions],
         family: task_definition[:family],
@@ -114,6 +120,20 @@ module EcsDeployer
     end
 
     private
+
+    # @param [Array, Hash] variables
+    # @param [Hash] replace_variables
+    def replace_parameter_variables!(variables, replace_variables = {})
+      for variable in variables do
+        if variable.class == Array || variable.class == Hash
+          replace_parameter_variables!(variable, replace_variables)
+        elsif variable.class == String
+          replace_variables.each do |replace_key, replace_value|
+            variable.gsub!("{{#{replace_key}}}", replace_value)
+          end
+        end
+      end
+    end
 
     # @param [Hash] task_definition
     def decrypt_environment_variables!(task_definition)

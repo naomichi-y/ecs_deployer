@@ -82,6 +82,18 @@ deployer.register_task('development.yml')
 deployer.update_service('cluster', 'development')
 ```
 
+`{{xxx}}` parameter is considered variable.
+
+```
+container_definitions:
+- name: wordpress
+  image: wordpress:{{tag}}
+```
+
+```
+deployer.register_task('development.yml', tag: 'latest')
+```
+
 ### CLI
 
 #### Register new task

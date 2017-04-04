@@ -2,7 +2,7 @@ container_definitions:
 - name: wordpress
   links:
   - mysql
-  image: wordpress
+  image: wordpress:{{tag}}
   essential: true
   port_mappings:
   - container_port: 80

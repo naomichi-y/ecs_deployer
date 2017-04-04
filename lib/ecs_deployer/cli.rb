@@ -24,9 +24,10 @@ module EcsDeployer
 
     desc 'task_register', 'Create new task definition'
     option :path, required: true
+    option :replace_variables, type: :hash, default: {}
     def task_register
       path = File.expand_path(options[:path], Dir.pwd)
-      result = @deployer.register_task(path)
+      result = @deployer.register_task(path, options[:replace_variables])
 
       puts "Registered task: #{result}"
     end
