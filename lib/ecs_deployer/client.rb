@@ -64,8 +64,6 @@ module EcsDeployer
       replace_parameter_variables!(task_definition, replace_variables)
       decrypt_environment_variables!(task_definition)
 
-puts task_definition
-exit
       result = @cli.register_task_definition(
         container_definitions: task_definition[:container_definitions],
         family: task_definition[:family],
