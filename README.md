@@ -19,13 +19,13 @@ gem 'ecs_deployer'
 
 And then execute:
 
-```
+```ruby
 $ bundle
 ```
 
 Or install it yourself as:
 
-```
+```ruby
 $ gem install ecs_deployer
 ```
 
@@ -34,7 +34,7 @@ $ gem install ecs_deployer
 Write task definition in YAML format.
 For available parameters see [Task Definition Parameters](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html).
 
-```
+```yaml
 container_definitions:
 - name: wordpress
   links:
@@ -62,7 +62,7 @@ family: hello_world
 `environment` parameter supports KMS encrypted values.
 Encrypted values must be enclosed in `${XXX}`.
 
-```
+```yaml
 - environment:
   - name: MYSQL_ROOT_PASSWORD
     value: ${fiSAIfIFxd...}
@@ -76,7 +76,7 @@ Values are decrypted when task is created.
 
 This sample file is in `spec/fixtures/task.yml`.
 
-```
+```ruby
 deployer = EcsDeployer::Client.new
 deployer.register_task('development.yml')
 deployer.update_service('cluster', 'development')
@@ -84,13 +84,13 @@ deployer.update_service('cluster', 'development')
 
 `{{xxx}}` parameter is considered variable.
 
-```
+```yaml
 container_definitions:
 - name: wordpress
   image: wordpress:{{tag}}
 ```
 
-```
+```ruby
 deployer.register_task('development.yml', tag: 'latest')
 ```
 
@@ -98,26 +98,26 @@ deployer.register_task('development.yml', tag: 'latest')
 
 #### Register new task
 
-```
+```ruby
 $ bundle exec ecs_deployer task-register --path=example/fixtures/task.yml
 ```
 
 #### Encrypt environment value
 
-```
+```ruby
 $ bundle exec ecs_deployer encrypt --master-key=master --value='test'
 Encrypted value: ${xxx}
 ```
 
 #### Decrypt environment value
 
-```
+```ruby
 $ bundle exec ecs_deployer decrypt --value='${xxx}'
 Decrypted value: xxx
 ```
 
 #### Update service
 
-```
+```ruby
 $ bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --timeout=600
 ```
