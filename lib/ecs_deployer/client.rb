@@ -47,16 +47,16 @@ module EcsDeployer
     end
 
     # @param [String] path
-    # @param [Hash] params
+    # @param [Hash] replace_variables
     # @return [String]
-    def register_task(path, params = {})
+    def register_task(path, replace_variables = {})
       raise IOError, "File does not exist. [#{path}]" unless File.exist?(path)
 
-      register_task_hash(YAML.load(File.read(path)), params)
+      register_task_hash(YAML.load(File.read(path)), replace_variables)
     end
 
     # @param [Hash] task_definition
-    # @param [Hash] params
+    # @param [Hash] replace_variables
     # @return [String]
     def register_task_hash(task_definition, replace_variables = {})
       task_definition = Oj.load(Oj.dump(task_definition), symbol_keys: true)
