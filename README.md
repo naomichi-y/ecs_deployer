@@ -7,7 +7,7 @@
 
 ## Description
 
-This package provides service deployment function of ECS.
+Deploy Docker container on AWS ECS..
 
 ## Installation
 

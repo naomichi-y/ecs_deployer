@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['n.yamakita@gmail.com']
 
   spec.summary       = 'Deploy application to ECS.'
-  spec.description   = 'This package provides the service deployment function of ECS.'
+  spec.description   = 'Deploy Docker container on AWS ECS.'
   spec.homepage      = 'https://github.com/naomichi-y/ecs_deployer'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
