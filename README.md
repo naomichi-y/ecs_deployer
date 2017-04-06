@@ -98,28 +98,28 @@ deployer.register_task('development.yml', tag: 'latest')
 
 #### Register new task
 
-```
+```bash
 $ bundle exec ecs_deployer task-register --path=spec/fixtures/task.yml --replace-variables=tag:latest
 Registered task: arn:aws:ecs:ap-northeast-1:xxx:task-definition/hello_world:53
 ```
 
 #### Encrypt environment value
 
-```
+```bash
 $ bundle exec ecs_deployer encrypt --master-key=master --value='test'
 Encrypted value: ${xxx}
 ```
 
 #### Decrypt environment value
 
-```
+```bash
 $ bundle exec ecs_deployer decrypt --value='${xxx}'
 Decrypted value: xxx
 ```
 
 #### Update service
 
-```
+```bash
 $ bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --timeout=600
 Start deploying...
 Deploying... [0/1] (20 seconds elapsed)
