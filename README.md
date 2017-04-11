@@ -5,6 +5,18 @@
 [![Code Climate](https://codeclimate.com/github/naomichi-y/ecs_deployer/badges/gpa.svg)](https://codeclimate.com/github/naomichi-y/ecs_deployer)
 [![CircleCI](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master.svg?style=shield)](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master)
 
+* [Description](#description)
+* [Installation](#installation)
+* [Task definition](#task-definition)
+  * [Encrypt of environment variables](#encrypt-of-environment-variables)
+* [Usage](#usage)
+  * [API](#api)
+  * [CLI](#cli)
+    * [Register new task](#register-new-task)
+    * [Encrypt environment value](#encrypt-environment-value)
+    * [Decrypt environment value](#decrypt-environment-value)
+    * [Update service](#update-service)
+    
 ## Description
 
 Deploy Docker container on AWS ECS..
