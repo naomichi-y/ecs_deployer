@@ -140,8 +140,10 @@ module EcsDeployer
         next unless container_definition.key?(:environment)
 
         container_definition[:environment].each do |environment|
-          match = environment[:value].match(ENCRYPT_PATTERN)
-          environment[:value] = decrypt(match[0]) if match
+          if environment[:value].class == String
+            match = environment[:value].match(ENCRYPT_PATTERN)
+            environment[:value] = decrypt(match[0]) if match
+          end
         end
       end
     end

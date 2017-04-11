@@ -4,11 +4,24 @@ module EcsDeployer
   describe Client do
     let(:deployer) { EcsDeployer::Client.new }
     let(:task_definition) { YAML.load(File.read('spec/fixtures/task.yml')) }
-    let(:task_definition_with_encrypt) do
-      task_definition['container_definitions'][0]['environment'] += [
-        name: 'ENCRYPT_KEY',
-        value: '${ENCRYPT_VALUE}'
+    let(:environments) do
+      [
+        {
+          name: 'NUMERIC_VALUE',
+          value: 0
+        },
+        {
+          name: 'STRING_VALUE',
+          value: 'STRING'
+        },
+        {
+          name: 'ENCRYPTED_VALUE',
+          value: '${ENCRYPTED_VALUE}'
+        }
       ]
+    end
+    let(:task_definition_with_encrypt) do
+      task_definition['container_definitions'][0]['environment'] += environments
       task_definition
     end
     let(:ecs_mock) { double('Aws::ECS::Client') }
@@ -179,15 +192,31 @@ module EcsDeployer
           let(:task_definition_hash_clone) { Marshal.load(Marshal.dump(task_definition_hash)) }
           let(:decrypt_response) { Aws::KMS::Types::DecryptResponse.new(plaintext: 'decrypted_value') }
 
-          it 'shuld be return decrypted values' do
+          before do
             allow(Base64).to receive(:strict_decode64)
             allow(kms_mock).to receive(:decrypt).and_return(decrypt_response)
-
             deployer.send(:decrypt_environment_variables!, task_definition_hash_clone)
+          end
+
+          it 'shuld be return numeric value' do
             expect(task_definition_hash_clone.to_json)
-              .to be_json_eql('ENCRYPT_KEY'.to_json).at_path('container_definitions/0/environment/1/name')
+              .to be_json_eql('NUMERIC_VALUE'.to_json).at_path('container_definitions/0/environment/1/name')
             expect(task_definition_hash_clone.to_json)
-              .to be_json_eql('decrypted_value'.to_json).at_path('container_definitions/0/environment/1/value')
+              .to be_json_eql(0.to_json).at_path('container_definitions/0/environment/1/value')
+          end
+
+          it 'shuld be return string value' do
+            expect(task_definition_hash_clone.to_json)
+              .to be_json_eql('STRING_VALUE'.to_json).at_path('container_definitions/0/environment/2/name')
+            expect(task_definition_hash_clone.to_json)
+              .to be_json_eql('STRING'.to_json).at_path('container_definitions/0/environment/2/value')
+          end
+
+          it 'shuld be return decrypted values' do
+            expect(task_definition_hash_clone.to_json)
+              .to be_json_eql('ENCRYPTED_VALUE'.to_json).at_path('container_definitions/0/environment/3/name')
+            expect(task_definition_hash_clone.to_json)
+              .to be_json_eql('decrypted_value'.to_json).at_path('container_definitions/0/environment/3/value')
           end
         end
 
