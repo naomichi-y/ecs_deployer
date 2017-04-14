@@ -8,7 +8,7 @@
 * [Description](#description)
 * [Installation](#installation)
 * [Task definition](#task-definition)
-  * [Encrypt of environment variables](#encrypt-of-environment-variables)
+  * [Encrypt of environment zs](#encrypt-of-environment-variables)
 * [Usage](#usage)
   * [API](#api)
   * [CLI](#cli)
@@ -112,7 +112,7 @@ deployer.register_task('development.yml', tag: 'latest')
 
 ```bash
 $ bundle exec ecs_deployer task-register --path=spec/fixtures/task.yml --replace-variables=tag:latest
-Registered task: arn:aws:ecs:ap-northeast-1:xxx:task-definition/hello_world:53
+Registered task: arn:aws:ecs:ap-northeast-1:xxx:task-definition/hello_world:latest
 ```
 
 #### Encrypt environment value
