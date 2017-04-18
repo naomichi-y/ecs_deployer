@@ -143,6 +143,9 @@ module EcsDeployer
           if environment[:value].class == String
             match = environment[:value].match(ENCRYPT_PATTERN)
             environment[:value] = decrypt(match[0]) if match
+          else
+            # https://github.com/naomichi-y/ecs_deployer/issues/6
+            environment[:value] = environment[:value].to_s
           end
         end
       end

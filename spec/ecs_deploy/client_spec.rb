@@ -202,7 +202,7 @@ module EcsDeployer
             expect(task_definition_hash_clone.to_json)
               .to be_json_eql('NUMERIC_VALUE'.to_json).at_path('container_definitions/0/environment/1/name')
             expect(task_definition_hash_clone.to_json)
-              .to be_json_eql(0.to_json).at_path('container_definitions/0/environment/1/value')
+              .to be_json_eql('0'.to_json).at_path('container_definitions/0/environment/1/value')
           end
 
           it 'shuld be return string value' do
