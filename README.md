@@ -153,3 +153,7 @@ Service update succeeded. [1/1]
 New task definition: arn:aws:ecs:ap-northeast-1:xxxx:task-definition/sandbox-development:68
 Update service: arn:aws:ecs:ap-northeast-1:xxxx:service/development
 ```
+
+## License
+
+MIT
