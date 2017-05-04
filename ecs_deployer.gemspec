@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.summary       = 'Deploy application to ECS.'
   spec.description   = 'Deploy Docker container on AWS ECS.'
   spec.homepage      = 'https://github.com/naomichi-y/ecs_deployer'
-  spec.licenses      = ['MIT']
+  spec.license       = 'MIT'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
