@@ -8,7 +8,7 @@
 * [Description](#description)
 * [Installation](#installation)
 * [Task definition](#task-definition)
-  * [Encrypt of environment zs](#encrypt-of-environment-variables)
+  * [Encrypt of environment variables](#encrypt-of-environment-variables)
 * [Usage](#usage)
   * [API](#api)
   * [CLI](#cli)
