@@ -3,6 +3,7 @@ require 'oj'
 require 'aws-sdk'
 require 'runtime_command'
 require 'base64'
+require 'docker-api'
 
 module EcsDeployer
   class Client
@@ -21,6 +22,20 @@ module EcsDeployer
       @kms = Aws::KMS::Client.new(aws_options)
       @timeout = 600
       @pauling_interval = 20
+      @docker_read_timeout = 1800
+    end
+
+    def build_image(path, dockerfile = 'Dockerfile')
+      Docker.options[:read_timeout] = @docker_read_timeout
+      image = Docker::Image.build_from_dir(path, dockerfile: dockerfile) do |line|
+        line.split("\n").each do |v|
+          if (log = Oj.load(v)) && log.has_key?('stream')
+            @runtime.puts(log['stream'])
+          end
+        end
+      end
+
+      image.id
     end
 
     # @param [String] mater_key
