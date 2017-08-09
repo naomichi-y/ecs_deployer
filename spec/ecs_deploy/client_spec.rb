@@ -283,7 +283,7 @@ module EcsDeployer
             result = deployer.send(:deploy_status, 'cluster', 'service')
             expect(result[:current_running_count]).to eq(1)
             expect(result[:new_running_count]).to eq(0)
-            expect(result[:task_status_logs]).to include('[RUNNING]')
+            expect(result[:task_status_logs][0]).to include('[RUNNING]')
           end
         end
 
@@ -312,7 +312,7 @@ module EcsDeployer
             result = deployer.send(:deploy_status, 'cluster', 'service')
             expect(result[:current_running_count]).to eq(2)
             expect(result[:new_running_count]).to eq(2)
-            expect(result[:task_status_logs]).to include('[RUNNING]')
+            expect(result[:task_status_logs][0]).to include('[RUNNING]')
           end
         end
       end
@@ -343,7 +343,7 @@ module EcsDeployer
             allow_any_instance_of(EcsDeployer::Client).to receive(:deploy_status).and_return(
               new_running_count: 0,
               current_running_count: 1,
-              task_status_logs: 'task_status_logs'
+              task_status_logs: ['task_status_logs']
             )
             deployer.instance_variable_set(:@timeout, 0.03)
             deployer.instance_variable_set(:@pauling_interval, 0.01)
