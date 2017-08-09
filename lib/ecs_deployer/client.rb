@@ -185,11 +185,11 @@ module EcsDeployer
       )
 
       new_running_count = 0
-      task_status_logs = ''
+      task_status_logs = []
 
       result[:tasks].each do |task|
         new_running_count += 1 if @new_task_definition_arn == task[:task_definition_arn]
-        task_status_logs << "  #{task[:task_definition_arn]} [#{task[:last_status]}]\n"
+        task_status_logs << "  #{task[:task_definition_arn]} [#{task[:last_status]}]"
       end
 
       {
@@ -223,7 +223,11 @@ module EcsDeployer
           @runtime.puts "Deploying... [#{result[:new_running_count]}/#{result[:current_running_count]}] (#{wait_time} seconds elapsed)"
           @runtime.puts "New task: #{@new_task_definition_arn}"
           @runtime.puts LOG_SEPARATOR
-          @runtime.puts result[:task_status_logs]
+
+          result[:task_status_logs].each do |log|
+            @runtime.puts log
+          end
+
           @runtime.puts LOG_SEPARATOR
           @runtime.puts 'You can stop process with Ctrl+C. Deployment will continue.'
 
