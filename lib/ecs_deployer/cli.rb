@@ -22,7 +22,7 @@ module EcsDeployer
       end
     end
 
-    desc 'task_register', 'Create new task definition'
+    desc 'task-register', 'Create new task definition'
     option :path, required: true
     option :replace_variables, type: :hash, default: {}
     def task_register
@@ -32,7 +32,7 @@ module EcsDeployer
       puts "Registered task: #{result}"
     end
 
-    desc 'update_service', 'Update service difinition.'
+    desc 'update-service', 'Update service difinition.'
     option :cluster, required: true
     option :service, required: true
     option :wait, type: :boolean, default: true

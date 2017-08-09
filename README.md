@@ -3,11 +3,23 @@
 [![Gem Version](https://badge.fury.io/rb/ecs_deployer.svg)](https://badge.fury.io/rb/ecs_deployer)
 [![Test Coverage](https://codeclimate.com/github/naomichi-y/ecs_deployer/badges/coverage.svg)](https://codeclimate.com/github/naomichi-y/ecs_deployer/coverage)
 [![Code Climate](https://codeclimate.com/github/naomichi-y/ecs_deployer/badges/gpa.svg)](https://codeclimate.com/github/naomichi-y/ecs_deployer)
-[![CircleCI](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master.svg?style=svg)](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master)
+[![CircleCI](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master.svg?style=shield)](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master)
 
+* [Description](#description)
+* [Installation](#installation)
+* [Task definition](#task-definition)
+  * [Encrypt of environment variables](#encrypt-of-environment-variables)
+* [Usage](#usage)
+  * [API](#api)
+  * [CLI](#cli)
+    * [Register new task](#register-new-task)
+    * [Encrypt environment value](#encrypt-environment-value)
+    * [Decrypt environment value](#decrypt-environment-value)
+    * [Update service](#update-service)
+    
 ## Description
 
-This package provides service deployment function of ECS.
+Deploy Docker container on AWS ECS..
 
 ## Installation
 
@@ -98,26 +110,50 @@ deployer.register_task('development.yml', tag: 'latest')
 
 #### Register new task
 
-```ruby
-$ bundle exec ecs_deployer task-register --path=example/fixtures/task.yml
+```bash
+$ bundle exec ecs_deployer task-register --path=spec/fixtures/task.yml --replace-variables=tag:latest
+Registered task: arn:aws:ecs:ap-northeast-1:xxx:task-definition/hello_world:latest
 ```
 
 #### Encrypt environment value
 
-```ruby
+```bash
 $ bundle exec ecs_deployer encrypt --master-key=master --value='test'
 Encrypted value: ${xxx}
 ```
 
 #### Decrypt environment value
 
-```ruby
+```bash
 $ bundle exec ecs_deployer decrypt --value='${xxx}'
 Decrypted value: xxx
 ```
 
 #### Update service
 
-```ruby
+```bash
 $ bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --timeout=600
+Start deploying...
+Deploying... [0/1] (20 seconds elapsed)
+New task: arn:aws:ecs:ap-northeast-1:xxxx:task-definition/sandbox-development:68
+------------------------------------------------------------------------------------------------
+  arn:aws:ecs:ap-northeast-1:xxxx:task-definition/sandbox-development:67 [RUNNING]
+------------------------------------------------------------------------------------------------
+You can stop process with Ctrl+C. Deployment will continue.
+
+Deploying... [1/2] (40 seconds elapsed)
+New task: arn:aws:ecs:ap-northeast-1:xxxx:task-definition/sandbox-development:68
+------------------------------------------------------------------------------------------------
+  arn:aws:ecs:ap-northeast-1:xxxx:task-definition/sandbox-development:68 [RUNNING]
+  arn:aws:ecs:ap-northeast-1:xxxx:task-definition/sandbox-development:67 [RUNNING]
+------------------------------------------------------------------------------------------------
+You can stop process with Ctrl+C. Deployment will continue.
+
+Service update succeeded. [1/1]
+New task definition: arn:aws:ecs:ap-northeast-1:xxxx:task-definition/sandbox-development:68
+Update service: arn:aws:ecs:ap-northeast-1:xxxx:service/development
 ```
+
+## License
+
+MIT
