@@ -67,7 +67,8 @@ module EcsDeployer
       result = @cli.register_task_definition(
         container_definitions: task_definition[:container_definitions],
         family: task_definition[:family],
-        task_role_arn: task_definition[:task_role_arn]
+        task_role_arn: task_definition[:task_role_arn],
+        volumes: task_definition[:volumes]
       )
 
       @family = result[:task_definition][:family]
