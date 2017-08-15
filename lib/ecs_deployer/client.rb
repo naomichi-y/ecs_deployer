@@ -2,6 +2,7 @@ require 'yaml'
 require 'oj'
 require 'aws-sdk'
 require 'base64'
+require 'logger'
 
 module EcsDeployer
   class Client
@@ -192,7 +193,7 @@ module EcsDeployer
       task_status_logs = []
 
       result[:tasks].each do |task|
-        new_running_count += 1 if @new_task_definition_arn == task[:task_definition_arn]
+        new_running_count += 1 if @new_task_definition_arn == task[:task_definition_arn] && task[:last_status] == 'RUNNING'
         task_status_logs << "  #{task[:task_definition_arn]} [#{task[:last_status]}]"
       end
 
