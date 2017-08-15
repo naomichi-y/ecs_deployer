@@ -218,22 +218,22 @@ module EcsDeployer
         wait_time += @pauling_interval
         result = deploy_status(cluster, service)
 
+        @logger.info "Deploying... [#{result[:new_running_count]}/#{result[:current_running_count]}] (#{wait_time} seconds elapsed)"
+        @logger.info "New task: #{@new_task_definition_arn}"
+        @logger.info LOG_SEPARATOR
+
+        result[:task_status_logs].each do |log|
+          @logger.info log
+        end
+
+        @logger.info LOG_SEPARATOR
+
         if result[:new_running_count] == result[:current_running_count]
           @logger.info "Service update succeeded. [#{result[:new_running_count]}/#{result[:current_running_count]}]"
           @logger.info "New task definition: #{@new_task_definition_arn}"
 
           break
-
         else
-          @logger.info "Deploying... [#{result[:new_running_count]}/#{result[:current_running_count]}] (#{wait_time} seconds elapsed)"
-          @logger.info "New task: #{@new_task_definition_arn}"
-          @logger.info LOG_SEPARATOR
-
-          result[:task_status_logs].each do |log|
-            @logger.info log
-          end
-
-          @logger.info LOG_SEPARATOR
           @logger.info 'You can stop process with Ctrl+C. Deployment will continue.'
 
           if wait_time > @timeout
