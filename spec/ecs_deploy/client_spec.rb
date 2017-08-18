@@ -38,8 +38,8 @@ module EcsDeployer
       end
 
       it 'should be return Aws::ECS::Client' do
-        expect(deployer.cli).to be_a(RSpec::Mocks::Double)
-        expect(deployer.timeout).to eq(600)
+        expect(deployer.ecs).to be_a(RSpec::Mocks::Double)
+        expect(deployer.timeout).to eq(900)
         expect(deployer.pauling_interval).to eq(20)
       end
     end
@@ -109,7 +109,7 @@ module EcsDeployer
 
     describe 'register_task_hash' do
       it 'should be registered task definition' do
-        allow(deployer.cli).to receive(:register_task_definition).and_return(
+        allow(deployer.ecs).to receive(:register_task_definition).and_return(
           task_definition: {
             family: 'family',
             revision: 'revision',
@@ -126,12 +126,12 @@ module EcsDeployer
 
     describe 'register_clone_task' do
       before do
-        allow(deployer.cli).to receive(:describe_services).and_return(
+        allow(deployer.ecs).to receive(:describe_services).and_return(
           services: [
             service_name: 'service'
           ]
         )
-        allow(deployer.cli).to receive(:describe_task_definition).and_return(
+        allow(deployer.ecs).to receive(:describe_task_definition).and_return(
           task_definition: {}
         )
         allow(deployer).to receive(:register_task_hash).and_return('new_task_definition_arn')
@@ -158,7 +158,7 @@ module EcsDeployer
           deployer.instance_variable_set(:@revision, 'revision')
         end
 
-        allow(deployer.cli).to receive(:update_service).and_return(
+        allow(deployer.ecs).to receive(:update_service).and_return(
           Aws::ECS::Types::UpdateServiceResponse.new(
             service: Aws::ECS::Types::Service.new(
               service_arn: 'service_arn'
@@ -240,7 +240,7 @@ module EcsDeployer
 
     describe 'service_status' do
       before do
-        allow(deployer.cli).to receive(:describe_services).and_return(
+        allow(deployer.ecs).to receive(:describe_services).and_return(
           Aws::ECS::Types::DescribeServicesResponse.new(
             services: [Aws::ECS::Types::Service.new(service_name: 'service_name')]
           )
@@ -265,12 +265,12 @@ module EcsDeployer
         context 'when deploying' do
           it 'should be return result' do
             deployer.instance_variable_set(:@new_task_definition_arn, 'current_arn')
-            allow(deployer.cli).to receive(:list_tasks).and_return(
+            allow(deployer.ecs).to receive(:list_tasks).and_return(
               Aws::ECS::Types::ListTasksResponse.new(
                 task_arns: ['task_arn']
               )
             )
-            allow(deployer.cli).to receive(:describe_tasks).and_return(
+            allow(deployer.ecs).to receive(:describe_tasks).and_return(
               Aws::ECS::Types::DescribeTasksResponse.new(
                 tasks: [
                   Aws::ECS::Types::Task.new(
@@ -280,7 +280,7 @@ module EcsDeployer
                 ]
               )
             )
-            result = deployer.send(:deploy_status, 'cluster', 'service')
+            result = deployer.send(:deploy_status, 'cluster', 'service', 'task_definition_arn')
             expect(result[:current_running_count]).to eq(1)
             expect(result[:new_running_count]).to eq(0)
             expect(result[:task_status_logs][0]).to include('[RUNNING]')
@@ -290,12 +290,12 @@ module EcsDeployer
         context 'when deployed' do
           it 'should be return result' do
             deployer.instance_variable_set(:@new_task_definition_arn, 'new_arn')
-            allow(deployer.cli).to receive(:list_tasks).and_return(
+            allow(deployer.ecs).to receive(:list_tasks).and_return(
               Aws::ECS::Types::ListTasksResponse.new(
                 task_arns: ['task_arn']
               )
             )
-            allow(deployer.cli).to receive(:describe_tasks).and_return(
+            allow(deployer.ecs).to receive(:describe_tasks).and_return(
               Aws::ECS::Types::DescribeTasksResponse.new(
                 tasks: [
                   Aws::ECS::Types::Task.new(
@@ -309,7 +309,7 @@ module EcsDeployer
                 ]
               )
             )
-            result = deployer.send(:deploy_status, 'cluster', 'service')
+            result = deployer.send(:deploy_status, 'cluster', 'service', 'task_definition_arn')
             expect(result[:current_running_count]).to eq(2)
             expect(result[:new_running_count]).to eq(2)
             expect(result[:task_status_logs][0]).to include('[RUNNING]')
@@ -319,12 +319,12 @@ module EcsDeployer
 
       context 'when task not exist' do
         it 'shuld be return error' do
-          allow(deployer.cli).to receive(:list_tasks).and_return(
+          allow(deployer.ecs).to receive(:list_tasks).and_return(
             Aws::ECS::Types::ListTasksResponse.new(
               task_arns: []
             )
           )
-          expect { deployer.send(:deploy_status, 'cluster', 'service') }.to raise_error(TaskRunningError)
+          expect { deployer.send(:deploy_status, 'cluster', 'service', 'task_definition_arn') }.to raise_error(TaskRunningError)
         end
       end
     end
@@ -348,7 +348,7 @@ module EcsDeployer
             deployer.instance_variable_set(:@timeout, 0.03)
             deployer.instance_variable_set(:@pauling_interval, 0.01)
 
-            expect { deployer.send(:wait_for_deploy, 'cluster', 'service') }.to raise_error(DeployTimeoutError)
+            expect { deployer.send(:wait_for_deploy, 'cluster', 'service', 'task_definition_arn') }.to raise_error(DeployTimeoutError)
           end
         end
       end
@@ -356,7 +356,7 @@ module EcsDeployer
       context 'when desired count is 0' do
         it 'should be return error' do
           allow_any_instance_of(EcsDeployer::Client).to receive(:service_status).and_return(desired_count: 0)
-          expect { deployer.send(:wait_for_deploy, 'cluster', 'service') }.to raise_error(TaskDesiredError)
+          expect { deployer.send(:wait_for_deploy, 'cluster', 'service', 'task_definition_arn') }.to raise_error(TaskDesiredError)
         end
       end
     end
