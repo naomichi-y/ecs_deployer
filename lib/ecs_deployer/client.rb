@@ -189,7 +189,7 @@ module EcsDeployer
       ).tasks
 
       description_tasks.each do |task|
-        raise ContainerStoppedError, task.stopped_reason if task.task_definition_arn == task_definition_arn
+        raise TaskStoppedError, task.stopped_reason if task.task_definition_arn == task_definition_arn
       end
     end
 

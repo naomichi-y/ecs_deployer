@@ -8,8 +8,8 @@ module EcsDeployer
   class TaskRunningError < EcsDeployer::Error; end
   class TaskDefinitionValidateError < EcsDeployer::Error; end
   class TaskDesiredError < EcsDeployer::Error; end
+  class TaskStoppedError < EcsDeployer::Error; end
   class KmsEncryptError < EcsDeployer::Error; end
   class KmsDecryptError < EcsDeployer::Error; end
-  class ContainerStoppedError < EcsDeployer::Error; end
   class DeployTimeoutError < EcsDeployer::Error; end
 end
