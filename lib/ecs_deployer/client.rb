@@ -234,7 +234,6 @@ module EcsDeployer
     # @param [String] task_definition_arn
     def wait_for_deploy(cluster, service, task_definition_arn)
       service_status = service_status(cluster, service)
-      raise TaskDesiredError, 'Task desired by service is 0.' if service_status[:desired_count].zero?
 
       wait_time = 0
       @logger.info 'Start deploying...'
