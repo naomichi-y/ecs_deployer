@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module EcsDeployer
   describe Client do
-    let(:deployer) { EcsDeployer::Client.new }
+    let(:deployer) { EcsDeployer::Client.new('cluster') }
     let(:task_definition) { YAML.load(File.read('spec/fixtures/task.yml')) }
     let(:environments) do
       [
@@ -39,7 +39,7 @@ module EcsDeployer
 
       it 'should be return Aws::ECS::Client' do
         expect(deployer.ecs).to be_a(RSpec::Mocks::Double)
-        expect(deployer.timeout).to eq(900)
+        expect(deployer.wait_timeout).to eq(900)
         expect(deployer.pauling_interval).to eq(20)
       end
     end
@@ -118,9 +118,6 @@ module EcsDeployer
         )
 
         expect(deployer.register_task_hash(task_definition)).to eq('new_task_definition_arn')
-        expect(deployer.instance_variable_get(:@family)).to eq('family')
-        expect(deployer.instance_variable_get(:@revision)).to eq('revision')
-        expect(deployer.instance_variable_get(:@new_task_definition_arn)).to eq('new_task_definition_arn')
       end
     end
 
@@ -139,13 +136,13 @@ module EcsDeployer
 
       context 'when find service' do
         it 'should be return new task definition arn' do
-          expect(deployer.register_clone_task('cluster', 'service')).to eq('new_task_definition_arn')
+          expect(deployer.register_clone_task('service')).to eq('new_task_definition_arn')
         end
       end
 
       context 'when not find service' do
         it 'should be return error' do
-          expect { deployer.register_clone_task('cluster', 'undefined') }.to raise_error(ServiceNotFoundError)
+          expect { deployer.register_clone_task('undefined') }.to raise_error(ServiceNotFoundError)
         end
       end
     end
@@ -170,7 +167,7 @@ module EcsDeployer
 
       context 'when wait is true' do
         it 'should be return service arn' do
-          expect(deployer.update_service('cluster', 'service', true)).to eq('service_arn')
+          expect(deployer.update_service('service', true)).to eq('service_arn')
           expect(deployer).to have_received(:register_clone_task)
           expect(deployer).to have_received(:wait_for_deploy)
         end
@@ -178,7 +175,7 @@ module EcsDeployer
 
       context 'when wait is false' do
         it 'should be return service arn' do
-          expect(deployer.update_service('cluster', 'service', false)).to eq('service_arn')
+          expect(deployer.update_service('service', false)).to eq('service_arn')
           expect(deployer).to have_received(:register_clone_task)
           expect(deployer).to_not have_received(:wait_for_deploy)
         end
@@ -249,13 +246,13 @@ module EcsDeployer
 
       context 'when exist service' do
         it 'should be return Aws::ECS::Types::Service' do
-          expect(deployer.send(:service_status, 'cluster', 'service_name')).to be_a(Aws::ECS::Types::Service)
+          expect(deployer.send(:service_status, 'service_name')).to be_a(Aws::ECS::Types::Service)
         end
       end
 
       context 'when not exist service' do
         it 'should be return error' do
-          expect { deployer.send(:service_status, 'cluster', 'undefined') }.to raise_error(ServiceNotFoundError)
+          expect { deployer.send(:service_status, 'undefined') }.to raise_error(ServiceNotFoundError)
         end
       end
     end
@@ -280,7 +277,7 @@ module EcsDeployer
                 ]
               )
             )
-            result = deployer.send(:deploy_status, 'cluster', 'service', 'task_definition_arn')
+            result = deployer.send(:deploy_status, 'service', 'task_definition_arn')
             expect(result[:current_running_count]).to eq(1)
             expect(result[:new_running_count]).to eq(0)
             expect(result[:task_status_logs][0]).to include('[RUNNING]')
@@ -309,7 +306,7 @@ module EcsDeployer
                 ]
               )
             )
-            result = deployer.send(:deploy_status, 'cluster', 'service', 'task_definition_arn')
+            result = deployer.send(:deploy_status, 'service', 'task_definition_arn')
             expect(result[:current_running_count]).to eq(2)
             expect(result[:new_running_count]).to eq(2)
             expect(result[:task_status_logs][0]).to include('[RUNNING]')
@@ -324,7 +321,7 @@ module EcsDeployer
               task_arns: []
             )
           )
-          expect { deployer.send(:deploy_status, 'cluster', 'service', 'task_definition_arn') }.to raise_error(TaskRunningError)
+          expect { deployer.send(:deploy_status, 'service', 'task_definition_arn') }.to raise_error(TaskRunningError)
         end
       end
     end
@@ -345,10 +342,10 @@ module EcsDeployer
               current_running_count: 1,
               task_status_logs: ['task_status_logs']
             )
-            deployer.instance_variable_set(:@timeout, 0.03)
+            deployer.instance_variable_set(:@wait_timeout, 0.03)
             deployer.instance_variable_set(:@pauling_interval, 0.01)
 
-            expect { deployer.send(:wait_for_deploy, 'cluster', 'service', 'task_definition_arn') }.to raise_error(DeployTimeoutError)
+            expect { deployer.send(:wait_for_deploy, 'service', 'task_definition_arn') }.to raise_error(DeployTimeoutError)
           end
         end
       end
@@ -356,7 +353,7 @@ module EcsDeployer
       context 'when desired count is 0' do
         it 'should be return error' do
           allow_any_instance_of(EcsDeployer::Client).to receive(:service_status).and_return(desired_count: 0)
-          expect { deployer.send(:wait_for_deploy, 'cluster', 'service', 'task_definition_arn') }.to raise_error(TaskDesiredError)
+          expect { deployer.send(:wait_for_deploy, 'service', 'task_definition_arn') }.to raise_error(TaskDesiredError)
         end
       end
     end
