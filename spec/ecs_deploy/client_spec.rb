@@ -109,15 +109,12 @@ module EcsDeployer
 
     describe 'register_task_hash' do
       it 'should be registered task definition' do
-        allow(deployer.ecs).to receive(:register_task_definition).and_return(
-          task_definition: {
-            family: 'family',
-            revision: 'revision',
-            task_definition_arn: 'new_task_definition_arn'
-          }
-        )
+        task_definition_mock = double('AWS::ECS::TaskDefinition')
+        register_task_definition_response_mock = double('Aws::ECS::Types::RegisterTaskDefinitionResponse')
+        allow(register_task_definition_response_mock).to receive(:[]).with(:task_definition).and_return(task_definition_mock)
+        allow(deployer.ecs).to receive(:register_task_definition).and_return(register_task_definition_response_mock)
 
-        expect(deployer.register_task_hash(task_definition)).to eq('new_task_definition_arn')
+        expect(deployer.register_task_hash(task_definition)).to be_a(task_definition_mock.class)
       end
     end
 
@@ -149,12 +146,6 @@ module EcsDeployer
 
     describe 'update_service' do
       before do
-        allow(deployer).to receive(:register_clone_task) do
-          deployer.instance_variable_set(:@new_task_definition_arn, 'new_task_definition_arn')
-          deployer.instance_variable_set(:@family, 'family')
-          deployer.instance_variable_set(:@revision, 'revision')
-        end
-
         allow(deployer.ecs).to receive(:update_service).and_return(
           Aws::ECS::Types::UpdateServiceResponse.new(
             service: Aws::ECS::Types::Service.new(
@@ -167,16 +158,22 @@ module EcsDeployer
 
       context 'when wait is true' do
         it 'should be return service arn' do
-          expect(deployer.update_service('service', true)).to eq('service_arn')
-          expect(deployer).to have_received(:register_clone_task)
+          task_definition_mock = double('AWS::ECS::TaskDefinition')
+          allow(task_definition_mock).to receive(:[]).with(:family).and_return('family')
+          allow(task_definition_mock).to receive(:[]).with(:revision).and_return('revision')
+
+          expect(deployer.update_service('service', task_definition_mock, true)).to eq('service_arn')
           expect(deployer).to have_received(:wait_for_deploy)
         end
       end
 
       context 'when wait is false' do
         it 'should be return service arn' do
-          expect(deployer.update_service('service', false)).to eq('service_arn')
-          expect(deployer).to have_received(:register_clone_task)
+          task_definition_mock = double('AWS::ECS::TaskDefinition')
+          allow(task_definition_mock).to receive(:[]).with(:family).and_return('family')
+          allow(task_definition_mock).to receive(:[]).with(:revision).and_return('revision')
+
+          expect(deployer.update_service('service', task_definition_mock, false)).to eq('service_arn')
           expect(deployer).to_not have_received(:wait_for_deploy)
         end
       end
@@ -261,7 +258,7 @@ module EcsDeployer
       context 'when task exist' do
         context 'when deploying' do
           it 'should be return result' do
-            deployer.instance_variable_set(:@new_task_definition_arn, 'current_arn')
+            allow(deployer).to receive(:detect_stopped_task)
             allow(deployer.ecs).to receive(:list_tasks).and_return(
               Aws::ECS::Types::ListTasksResponse.new(
                 task_arns: ['task_arn']
@@ -286,7 +283,7 @@ module EcsDeployer
 
         context 'when deployed' do
           it 'should be return result' do
-            deployer.instance_variable_set(:@new_task_definition_arn, 'new_arn')
+            allow(deployer).to receive(:detect_stopped_task)
             allow(deployer.ecs).to receive(:list_tasks).and_return(
               Aws::ECS::Types::ListTasksResponse.new(
                 task_arns: ['task_arn']
@@ -306,7 +303,7 @@ module EcsDeployer
                 ]
               )
             )
-            result = deployer.send(:deploy_status, 'service', 'task_definition_arn')
+            result = deployer.send(:deploy_status, 'service', 'new_arn')
             expect(result[:current_running_count]).to eq(2)
             expect(result[:new_running_count]).to eq(2)
             expect(result[:task_status_logs][0]).to include('[RUNNING]')
@@ -347,13 +344,6 @@ module EcsDeployer
 
             expect { deployer.send(:wait_for_deploy, 'service', 'task_definition_arn') }.to raise_error(DeployTimeoutError)
           end
-        end
-      end
-
-      context 'when desired count is 0' do
-        it 'should be return error' do
-          allow_any_instance_of(EcsDeployer::Client).to receive(:service_status).and_return(desired_count: 0)
-          expect { deployer.send(:wait_for_deploy, 'service', 'task_definition_arn') }.to raise_error(TaskDesiredError)
         end
       end
     end
