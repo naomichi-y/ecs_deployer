@@ -147,6 +147,7 @@ module EcsDeployer
     end
 
     # @param [String] service
+    # @return [Bool]
     def exist_service?(service)
       status = nil
       result = @ecs.describe_services(
