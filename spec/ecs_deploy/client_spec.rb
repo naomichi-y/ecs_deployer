@@ -40,7 +40,7 @@ module EcsDeployer
       it 'should be return Aws::ECS::Client' do
         expect(deployer.ecs).to be_a(RSpec::Mocks::Double)
         expect(deployer.wait_timeout).to eq(900)
-        expect(deployer.pauling_interval).to eq(20)
+        expect(deployer.polling_interval).to eq(20)
       end
     end
 
@@ -232,7 +232,7 @@ module EcsDeployer
       end
     end
 
-    describe 'service_status' do
+    describe 'exist_service?' do
       before do
         allow(deployer.ecs).to receive(:describe_services).and_return(
           Aws::ECS::Types::DescribeServicesResponse.new(
@@ -243,13 +243,13 @@ module EcsDeployer
 
       context 'when exist service' do
         it 'should be return Aws::ECS::Types::Service' do
-          expect(deployer.send(:service_status, 'service_name')).to be_a(Aws::ECS::Types::Service)
+          expect(deployer.send(:exist_service?, 'service_name')).to be(true)
         end
       end
 
       context 'when not exist service' do
-        it 'should be return error' do
-          expect { deployer.send(:service_status, 'undefined') }.to raise_error(ServiceNotFoundError)
+        it 'should be return false' do
+          expect(deployer.send(:exist_service?, 'undefined')).to eq(false)
         end
       end
     end
@@ -333,14 +333,14 @@ module EcsDeployer
 
         context 'when timed out' do
           it 'shuld be return error' do
-            allow_any_instance_of(EcsDeployer::Client).to receive(:service_status).and_return(desired_count: 1)
+            allow_any_instance_of(EcsDeployer::Client).to receive(:exist_service?).and_return(true)
             allow_any_instance_of(EcsDeployer::Client).to receive(:deploy_status).and_return(
               new_running_count: 0,
               current_running_count: 1,
               task_status_logs: ['task_status_logs']
             )
             deployer.instance_variable_set(:@wait_timeout, 0.03)
-            deployer.instance_variable_set(:@pauling_interval, 0.01)
+            deployer.instance_variable_set(:@polling_interval, 0.01)
 
             expect { deployer.send(:wait_for_deploy, 'service', 'task_definition_arn') }.to raise_error(DeployTimeoutError)
           end

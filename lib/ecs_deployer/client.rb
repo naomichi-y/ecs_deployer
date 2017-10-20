@@ -7,13 +7,14 @@ require 'logger'
 module EcsDeployer
   class Client
     LOG_SEPARATOR = '-' * 96
-    ENCRYPT_PATTERN = /^\${(.+)}$/
+    ENCRYPT_VARIABLE_PATTERN = /^\${(.+)}$/
 
     attr_reader :ecs
-    attr_accessor :wait_timeout, :pauling_interval
+    attr_accessor :wait_timeout, :polling_interval
 
     # @param [String] cluster
     # @param [Logger] logger
+    # @param [Hash] aws_options
     # @return [EcsDeployer::Client]
     def initialize(cluster, logger = nil, aws_options = {})
       @cluster = cluster
@@ -21,7 +22,7 @@ module EcsDeployer
       @ecs = Aws::ECS::Client.new(aws_options)
       @kms = Aws::KMS::Client.new(aws_options)
       @wait_timeout = 900
-      @pauling_interval = 20
+      @polling_interval = 20
     end
 
     # @param [String] mater_key
@@ -37,7 +38,7 @@ module EcsDeployer
     # @param [String] value
     # @return [String]
     def decrypt(value)
-      match = value.match(ENCRYPT_PATTERN)
+      match = value.match(ENCRYPT_VARIABLE_PATTERN)
       raise KmsDecryptError, 'Encrypted string is invalid.' unless match
 
       begin
@@ -135,7 +136,7 @@ module EcsDeployer
 
         container_definition[:environment].each do |environment|
           if environment[:value].class == String
-            match = environment[:value].match(ENCRYPT_PATTERN)
+            match = environment[:value].match(ENCRYPT_VARIABLE_PATTERN)
             environment[:value] = decrypt(match[0]) if match
           else
             # https://github.com/naomichi-y/ecs_deployer/issues/6
@@ -146,8 +147,7 @@ module EcsDeployer
     end
 
     # @param [String] service
-    # @return [Aws::ECS::Types::Service]
-    def service_status(service)
+    def exist_service?(service)
       status = nil
       result = @ecs.describe_services(
         cluster: @cluster,
@@ -159,9 +159,7 @@ module EcsDeployer
         break
       end
 
-      raise ServiceNotFoundError, "'#{service}' service is not found." if status.nil?
-
-      status
+      status.nil? ? false : true
     end
 
     # @param [String] service
@@ -223,14 +221,14 @@ module EcsDeployer
     # @param [String] service
     # @param [String] task_definition_arn
     def wait_for_deploy(service, task_definition_arn)
-      service_status = service_status(service)
+      raise ServiceNotFoundError, "'#{service}' service is not found." unless exist_service?(service)
 
       wait_time = 0
       @logger.info 'Start deploying...'
 
       loop do
-        sleep(@pauling_interval)
-        wait_time += @pauling_interval
+        sleep(@polling_interval)
+        wait_time += @polling_interval
         result = deploy_status(service, task_definition_arn)
 
         @logger.info "Deploying... [#{result[:new_running_count]}/#{result[:current_running_count]}] (#{wait_time} seconds elapsed)"

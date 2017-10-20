@@ -1,6 +1,7 @@
 AllCops:
   Exclude:
   - 'tmp/**/*'
+  - 'vendor/**/*'
 Style/BlockComments:
   Enabled: false
 Style/Documentation:
