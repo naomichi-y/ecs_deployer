@@ -1,4 +1,4 @@
-# Ecs deployer
+# ECS deployer
 
 [![Gem Version](https://badge.fury.io/rb/ecs_deployer.svg)](https://badge.fury.io/rb/ecs_deployer)
 [![Test Coverage](https://codeclimate.com/github/naomichi-y/ecs_deployer/badges/coverage.svg)](https://codeclimate.com/github/naomichi-y/ecs_deployer/coverage)
