@@ -10,15 +10,17 @@ module EcsDeployer
     ENCRYPT_PATTERN = /^\${(.+)}$/
 
     attr_reader :ecs
-    attr_accessor :timeout, :pauling_interval
+    attr_accessor :wait_timeout, :pauling_interval
 
+    # @param [String] cluster
     # @param [Logger] logger
     # @return [EcsDeployer::Client]
-    def initialize(logger = nil, aws_options = {})
+    def initialize(cluster, logger = nil, aws_options = {})
+      @cluster = cluster
       @logger = logger.nil? ? Logger.new(STDOUT) : logger
       @ecs = Aws::ECS::Client.new(aws_options)
       @kms = Aws::KMS::Client.new(aws_options)
-      @timeout = 900
+      @wait_timeout = 900
       @pauling_interval = 20
     end
 
@@ -56,7 +58,7 @@ module EcsDeployer
 
     # @param [Hash] task_definition
     # @param [Hash] replace_variables
-    # @return [String]
+    # @return [Aws::ECS::Types::TaskDefinition]
     def register_task_hash(task_definition, replace_variables = {})
       task_definition = Oj.load(Oj.dump(task_definition), symbol_keys: true)
 
@@ -70,19 +72,14 @@ module EcsDeployer
         volumes: task_definition[:volumes]
       )
 
-      @family = result[:task_definition][:family]
-      @revision = result[:task_definition][:revision]
-      @new_task_definition_arn = result[:task_definition][:task_definition_arn]
+      result[:task_definition]
     end
 
-    # @param [String] cluster
     # @param [String] service
     # @return [String]
-    def register_clone_task(cluster, service)
-      detected_service = false
-
+    def register_clone_task(service)
       result = @ecs.describe_services(
-        cluster: cluster,
+        cluster: @cluster,
         services: [service]
       )
 
@@ -92,28 +89,25 @@ module EcsDeployer
         result = @ecs.describe_task_definition(
           task_definition: svc[:task_definition]
         )
-        @new_task_definition_arn = register_task_hash(result[:task_definition].to_hash)
-        detected_service = true
-        break
+
+        return register_task_hash(result[:task_definition].to_hash)
       end
 
-      raise ServiceNotFoundError, "'#{service}' service is not found." unless detected_service
-
-      @new_task_definition_arn
+      raise ServiceNotFoundError, "'#{service}' service is not found."
     end
 
-    # @param [String] cluster
     # @param [String] service
+    # @param [Aws::ECS::Types::TaskDefinition] task_definition
     # @return [String]
-    def update_service(cluster, service, wait = true)
-      register_clone_task(cluster, service) if @new_task_definition_arn.nil?
+    def update_service(service, task_definition = nil, wait = true)
+      task_definition = register_clone_task(service) if task_definition.nil?
       result = @ecs.update_service(
-        cluster: cluster,
+        cluster: @cluster,
         service: service,
-        task_definition: @family + ':' + @revision.to_s
+        task_definition: task_definition[:family] + ':' + task_definition[:revision].to_s
       )
 
-      wait_for_deploy(cluster, service, result.service.task_definition) if wait
+      wait_for_deploy(service, result.service.task_definition) if wait
       result.service.service_arn
     end
 
@@ -151,13 +145,12 @@ module EcsDeployer
       end
     end
 
-    # @param [String] cluster
     # @param [String] service
     # @return [Aws::ECS::Types::Service]
-    def service_status(cluster, service)
+    def service_status(service)
       status = nil
       result = @ecs.describe_services(
-        cluster: cluster,
+        cluster: @cluster,
         services: [service]
       )
       result[:services].each do |svc|
@@ -171,12 +164,11 @@ module EcsDeployer
       status
     end
 
-    # @param [String] cluster
     # @param [String] service
     # @param [String] task_definition_arn
-    def detect_stopped_task(cluster, service, task_definition_arn)
+    def detect_stopped_task(service, task_definition_arn)
       stopped_tasks = @ecs.list_tasks(
-        cluster: cluster,
+        cluster: @cluster,
         service_name: service,
         desired_status: 'STOPPED'
       ).task_arns
@@ -184,7 +176,7 @@ module EcsDeployer
       return if stopped_tasks.size.zero?
 
       description_tasks = @ecs.describe_tasks(
-        cluster: cluster,
+        cluster: @cluster,
         tasks: stopped_tasks
       ).tasks
 
@@ -193,16 +185,15 @@ module EcsDeployer
       end
     end
 
-    # @param [String] cluster
     # @param [String] service
     # @param [String] task_definition_arn
     # @return [Hash]
-    def deploy_status(cluster, service, task_definition_arn)
-      detect_stopped_task(cluster, service, task_definition_arn)
+    def deploy_status(service, task_definition_arn)
+      detect_stopped_task(service, task_definition_arn)
 
       # Get current tasks
       result = @ecs.list_tasks(
-        cluster: cluster,
+        cluster: @cluster,
         service_name: service,
         desired_status: 'RUNNING'
       )
@@ -210,7 +201,7 @@ module EcsDeployer
       raise TaskRunningError, 'Running task not found.' if result[:task_arns].size.zero?
 
       result = @ecs.describe_tasks(
-        cluster: cluster,
+        cluster: @cluster,
         tasks: result[:task_arns]
       )
 
@@ -218,7 +209,7 @@ module EcsDeployer
       task_status_logs = []
 
       result[:tasks].each do |task|
-        new_running_count += 1 if @new_task_definition_arn == task[:task_definition_arn] && task[:last_status] == 'RUNNING'
+        new_running_count += 1 if task_definition_arn == task[:task_definition_arn] && task[:last_status] == 'RUNNING'
         task_status_logs << "  #{task[:task_definition_arn]} [#{task[:last_status]}]"
       end
 
@@ -229,11 +220,10 @@ module EcsDeployer
       }
     end
 
-    # @param [String] cluster
     # @param [String] service
     # @param [String] task_definition_arn
-    def wait_for_deploy(cluster, service, task_definition_arn)
-      service_status = service_status(cluster, service)
+    def wait_for_deploy(service, task_definition_arn)
+      service_status = service_status(service)
 
       wait_time = 0
       @logger.info 'Start deploying...'
@@ -241,10 +231,10 @@ module EcsDeployer
       loop do
         sleep(@pauling_interval)
         wait_time += @pauling_interval
-        result = deploy_status(cluster, service, task_definition_arn)
+        result = deploy_status(service, task_definition_arn)
 
         @logger.info "Deploying... [#{result[:new_running_count]}/#{result[:current_running_count]}] (#{wait_time} seconds elapsed)"
-        @logger.info "New task: #{@new_task_definition_arn}"
+        @logger.info "New task: #{task_definition_arn}"
         @logger.info LOG_SEPARATOR
 
         result[:task_status_logs].each do |log|
@@ -255,14 +245,14 @@ module EcsDeployer
 
         if result[:new_running_count] == result[:current_running_count]
           @logger.info "Service update succeeded. [#{result[:new_running_count]}/#{result[:current_running_count]}]"
-          @logger.info "New task definition: #{@new_task_definition_arn}"
+          @logger.info "New task definition: #{task_definition_arn}"
 
           break
         else
           @logger.info 'You can stop process with Ctrl+C. Deployment will continue.'
 
-          if wait_time > @timeout
-            @logger.info "New task definition: #{@new_task_definition_arn}"
+          if wait_time > @wait_timeout
+            @logger.info "New task definition: #{task_definition_arn}"
             raise DeployTimeoutError, 'Service is being updating, but process is timed out.'
           end
         end
