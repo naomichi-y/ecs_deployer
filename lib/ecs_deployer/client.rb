@@ -50,7 +50,7 @@ module EcsDeployer
 
     # @param [String] path
     # @param [Hash] replace_variables
-    # @return [String]
+    # @return [Aws::ECS::Types::TaskDefinition]
     def register_task(path, replace_variables = {})
       raise IOError, "File does not exist. [#{path}]" unless File.exist?(path)
 
