@@ -3,7 +3,7 @@ require 'spec_helper'
 module EcsDeployer
   module Task
     describe Client do
-      let(:task_client) { EcsDeployer::Task::Client.new('cluster') }
+      let(:task_client) { EcsDeployer::Task::Client.new('cluster', region: 'ap-northeast-1') }
       let(:task_definition) { YAML.load(File.read('spec/fixtures/rspec.yml')) }
       let(:kms_client_mock) { double('Aws::KMS::Client') }
       let(:environments) do
@@ -60,7 +60,7 @@ module EcsDeployer
         end
       end
 
-      describe 'register_clone_task' do
+      describe 'register_clone' do
         before do
           allow(task_client.ecs).to receive(:describe_services).and_return(
             services: [

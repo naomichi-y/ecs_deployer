@@ -2,24 +2,12 @@ require 'spec_helper'
 
 module EcsDeployer
   describe Client do
-    let(:deployer) { EcsDeployer::Client.new('cluster') }
+    let(:deployer) { EcsDeployer::Client.new('cluster', nil, region: 'ap-northeast-1') }
     let(:task_definition) { YAML.load(File.read('spec/fixtures/rspec.yml')) }
     let(:ecs_mock) { double('Aws::ECS::Client') }
 
     before do
       allow(Aws::ECS::Client).to receive(:new).and_return(ecs_mock)
-    end
-
-    describe 'initialize' do
-      it 'should be return instance' do
-        expect(deployer).to be_a(EcsDeployer::Client)
-      end
-
-      it 'should be return Aws::ECS::Client' do
-        expect(deployer.ecs).to be_a(RSpec::Mocks::Double)
-        expect(deployer.wait_timeout).to eq(900)
-        expect(deployer.polling_interval).to eq(20)
-      end
     end
 
     describe 'update_service' do
