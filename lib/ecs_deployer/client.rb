@@ -10,7 +10,7 @@ module EcsDeployer
     ENCRYPT_VARIABLE_PATTERN = /^\${(.+)}$/
 
     attr_reader :ecs
-    attr_accessor :wait_timeout, :polling_interval
+    attr_accessor :wait_timeout, :polling_interval, :scheduled_task
 
     # @param [String] cluster
     # @param [Logger] logger
@@ -23,6 +23,7 @@ module EcsDeployer
       @kms = Aws::KMS::Client.new(aws_options)
       @wait_timeout = 900
       @polling_interval = 20
+      @scheduled_task = EcsDeployer::ScheduledTask::Client.new(cluster, aws_options)
     end
 
     # @param [String] mater_key
