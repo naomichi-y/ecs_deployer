@@ -7,7 +7,7 @@ Dotenv.load
 path = File.expand_path(ENV['TASK_PATH'], '.')
 
 deployer = EcsDeployer::Client.new(ENV['CLUSTER'])
-task_definition = deployer.register_task(path, tag: 'latest')
+task_definition = deployer.task.register(path, tag: 'latest')
 
 logger = Logger.new(STDOUT)
 logger.info(task_definition.task_definition_arn)

@@ -1,3 +1,5 @@
+require 'base64'
+
 module EcsDeployer
   module Util
     class Cipher
