@@ -7,9 +7,8 @@ require 'logger'
 module EcsDeployer
   class Client
     LOG_SEPARATOR = '-' * 96
-    ENCRYPT_VARIABLE_PATTERN = /^\${(.+)}$/
 
-    attr_reader :ecs
+    attr_reader :ecs, :cipher
     attr_accessor :wait_timeout, :polling_interval, :scheduled_task
 
     # @param [String] cluster
@@ -20,33 +19,10 @@ module EcsDeployer
       @cluster = cluster
       @logger = logger.nil? ? Logger.new(STDOUT) : logger
       @ecs = Aws::ECS::Client.new(aws_options)
-      @kms = Aws::KMS::Client.new(aws_options)
+      @cipher = EcsDeployer::Util::Cipher.new(aws_options)
       @wait_timeout = 900
       @polling_interval = 20
       @scheduled_task = EcsDeployer::ScheduledTask::Client.new(cluster, aws_options)
-    end
-
-    # @param [String] mater_key
-    # @param [String] value
-    # @return [String]
-    def encrypt(master_key, value)
-      encode = @kms.encrypt(key_id: "alias/#{master_key}", plaintext: value)
-      "${#{Base64.strict_encode64(encode.ciphertext_blob)}}"
-    rescue => e
-      raise KmsEncryptError, e.to_s
-    end
-
-    # @param [String] value
-    # @return [String]
-    def decrypt(value)
-      match = value.match(ENCRYPT_VARIABLE_PATTERN)
-      raise KmsDecryptError, 'Encrypted string is invalid.' unless match
-
-      begin
-        @kms.decrypt(ciphertext_blob: Base64.strict_decode64(match[1])).plaintext
-      rescue => e
-        raise KmsDecryptError, e.to_s
-      end
     end
 
     # @param [String] path
@@ -137,8 +113,8 @@ module EcsDeployer
 
         container_definition[:environment].each do |environment|
           if environment[:value].class == String
-            match = environment[:value].match(ENCRYPT_VARIABLE_PATTERN)
-            environment[:value] = decrypt(match[0]) if match
+            match = environment[:value].match(EcsDeployer::Util::Cipher::ENCRYPT_VARIABLE_PATTERN)
+            environment[:value] = @cipher.decrypt(match[0]) if match
           else
             # https://github.com/naomichi-y/ecs_deployer/issues/6
             environment[:value] = environment[:value].to_s

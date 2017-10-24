@@ -3,6 +3,7 @@ require 'ecs_deployer/cli'
 require 'ecs_deployer/error'
 require 'ecs_deployer/scheduled_task/client'
 require 'ecs_deployer/scheduled_task/target'
+require 'ecs_deployer/util/cipher'
 require 'ecs_deployer/version'
 
 module EcsDeployer

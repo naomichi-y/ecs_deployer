@@ -52,13 +52,13 @@ module EcsDeployer
     option :master_key, required: true
     option :value, required: true
     def encrypt
-      puts "Encrypted value: #{@deployer.encrypt(options[:master_key], options[:value])}"
+      puts "Encrypted value: #{@deployer.cipher.encrypt(options[:master_key], options[:value])}"
     end
 
     desc 'decrypt', 'Decrypt value of argument with KMS.'
     option :value, required: true
     def decrypt
-      puts "Decrypted value: #{@deployer.decrypt(options[:value])}"
+      puts "Decrypted value: #{@deployer.cipher.decrypt(options[:value])}"
     end
   end
 end
