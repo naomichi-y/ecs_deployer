@@ -12,7 +12,7 @@ deployer = EcsDeployer::Client.new(cluster)
 task_definition = deployer.register_task(path, tag: 'latest')
 # scheduled_task = deployer.scheduled_task
 #
-# target_builder = deployer.scheduled_task.target_builder(target)
+# target_builder = scheduled_task.target_builder(target)
 # target_builder.task_definition_arn = task_definition.task_definition_arn
 # target_builder.task_count = 2
 
