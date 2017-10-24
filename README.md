@@ -5,7 +5,6 @@
 [![Code Climate](https://codeclimate.com/github/naomichi-y/ecs_deployer/badges/gpa.svg)](https://codeclimate.com/github/naomichi-y/ecs_deployer)
 [![CircleCI](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master.svg?style=shield)](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master)
 
-* [Description](#description)
 * [Installation](#installation)
 * [Task definition](#task-definition)
   * [Encrypt of environment variables](#encrypt-of-environment-variables)
@@ -16,7 +15,7 @@
     * [Encrypt environment value](#encrypt-environment-value)
     * [Decrypt environment value](#decrypt-environment-value)
     * [Update service](#update-service)
-    
+
 ## Description
 
 Deploy Docker container on AWS ECS..
@@ -47,26 +46,15 @@ Write task definition in YAML format.
 For available parameters see [Task Definition Parameters](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html).
 
 ```yaml
+family: nginx
 container_definitions:
-- name: wordpress
-  links:
-  - mysql
-  image: wordpress
+- name: web
+  image: nginx:{{tag}}
   essential: true
   port_mappings:
   - container_port: 80
-    hostPort: 80
-  memory: 512
-  cpu: 10
-- environment:
-  - name: MYSQL_ROOT_PASSWORD
-    value: password
-  name: mysql
-  image: mysql
-  cpu: 10
-  memory: 512
-  essential: true
-family: hello_world
+    host_port: 80
+  memory: 256
 ```
 
 ### Encrypt of environment variables
@@ -89,17 +77,17 @@ Values are decrypted when task is created.
 This sample file is in `spec/fixtures/task.yml`.
 
 ```ruby
-deployer = EcsDeployer::Client.new
+deployer = EcsDeployer::Client.new('cluster')
 deployer.register_task('development.yml')
-deployer.update_service('cluster', 'development')
+deployer.update_service('development')
 ```
 
 `{{xxx}}` parameter is construed variable.
 
 ```yaml
 container_definitions:
-- name: wordpress
-  image: wordpress:{{tag}}
+- name: nginx
+  image: web:{{tag}}
 ```
 
 ```ruby
@@ -112,7 +100,7 @@ deployer.register_task('development.yml', tag: 'latest')
 
 ```bash
 $ bundle exec ecs_deployer task-register --path=spec/fixtures/task.yml --replace-variables=tag:latest
-Registered task: arn:aws:ecs:ap-northeast-1:xxx:task-definition/hello_world:latest
+Registered task: arn:aws:ecs:ap-northeast-1:xxx:task-definition/nginx:latest
 ```
 
 #### Encrypt environment value

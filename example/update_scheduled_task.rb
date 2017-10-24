@@ -1,17 +1,15 @@
 require 'bundler/setup'
 require 'ecs_deployer'
+require 'dotenv'
 
-path = File.expand_path('../spec/fixtures/scheduled_task.yml', File.dirname(File.realpath(__FILE__)))
+Dotenv.load
+path = File.expand_path(ENV['TASK_PATH'], '.')
 
-cluster = 'test'
-rule = 'curl'
-target = 'worker'
-
-deployer = EcsDeployer::Client.new(cluster)
+deployer = EcsDeployer::Client.new(ENV['CLUSTER'])
 task_definition = deployer.register_task(path, tag: 'latest')
 
 scheduled_task = deployer.scheduled_task
-target_builder = scheduled_task.target_builder(target)
+target_builder = scheduled_task.target_builder(ENV['SCHEDULED_TASK_TARGET'])
 target_builder.task_definition_arn = task_definition.task_definition_arn
 
-scheduled_task.update(rule, 'cron(* * * * ? *)', [target_builder.to_hash])
+scheduled_task.update(ENV['SCHEDULED_TASK_RULE'], 'cron(* * * * ? *)', [target_builder.to_hash])

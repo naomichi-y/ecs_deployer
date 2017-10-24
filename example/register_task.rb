@@ -1,13 +1,13 @@
 require 'bundler/setup'
 require 'ecs_deployer'
 require 'logger'
+require 'dotenv'
 
-path = File.expand_path('../spec/fixtures/task.yml', File.dirname(File.realpath(__FILE__)))
+Dotenv.load
+path = File.expand_path(ENV['TASK_PATH'], '.')
 
-cluster = 'test'
-
-deployer = EcsDeployer::Client.new(cluster)
+deployer = EcsDeployer::Client.new(ENV['CLUSTER'])
 task_definition = deployer.register_task(path, tag: 'latest')
 
 logger = Logger.new(STDOUT)
-logger.info(task_definition)
+logger.info(task_definition.task_definition_arn)
