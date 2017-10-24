@@ -1,0 +1,20 @@
+container_definitions:
+- name: wordpress
+  links:
+  - mysql
+  image: wordpress:{{tag}}
+  essential: true
+  port_mappings:
+  - container_port: 80
+    host_port: 80
+  memory: 512
+  cpu: 10
+  environment:
+  - name: MYSQL_ROOT_PASSWORD
+    value: password
+- name: mysql
+  image: mysql
+  cpu: 10
+  memory: 512
+  essential: true
+family: hello_world

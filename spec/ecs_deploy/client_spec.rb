@@ -3,7 +3,7 @@ require 'spec_helper'
 module EcsDeployer
   describe Client do
     let(:deployer) { EcsDeployer::Client.new('cluster') }
-    let(:task_definition) { YAML.load(File.read('spec/fixtures/task.yml')) }
+    let(:task_definition) { YAML.load(File.read('spec/fixtures/rspec.yml')) }
     let(:environments) do
       [
         {
