@@ -5,6 +5,7 @@
 [![Code Climate](https://codeclimate.com/github/naomichi-y/ecs_deployer/badges/gpa.svg)](https://codeclimate.com/github/naomichi-y/ecs_deployer)
 [![CircleCI](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master.svg?style=shield)](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master)
 
+* [Description](#description)
 * [Installation](#installation)
 * [Task definition](#task-definition)
   * [Encrypt of environment variables](#encrypt-of-environment-variables)
@@ -18,7 +19,11 @@
 
 ## Description
 
-Deploy Docker container on AWS ECS..
+Deploy Docker container on AWS ECS.
+
+* Create task
+* Update service
+* Update scheduled task
 
 ## Installation
 
@@ -74,13 +79,7 @@ Values are decrypted when task is created.
 
 ### API
 
-This sample file is in `spec/fixtures/task.yml`.
-
-```ruby
-deployer = EcsDeployer::Client.new('cluster')
-deployer.register_task('development.yml')
-deployer.update_service('development')
-```
+Refer to the [sample](https://github.com/naomichi-y/ecs_deployer/tree/master/example) code.
 
 `{{xxx}}` parameter is construed variable.
 
