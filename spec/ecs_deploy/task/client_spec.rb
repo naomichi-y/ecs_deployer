@@ -79,13 +79,13 @@ module EcsDeployer
 
         context 'when find service' do
           it 'should be return new task definition arn' do
-            expect(task_client.register_clone('service')).to eq('new_task_definition_arn')
+            expect(task_client.register_clone('cluster', 'service')).to eq('new_task_definition_arn')
           end
         end
 
         context 'when not find service' do
           it 'should be return error' do
-            expect { task_client.register_clone('undefined') }.to raise_error(ServiceNotFoundError)
+            expect { task_client.register_clone('cluster', 'undefined') }.to raise_error(ServiceNotFoundError)
           end
         end
       end

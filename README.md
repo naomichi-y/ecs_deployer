@@ -119,7 +119,7 @@ Decrypted value: xxx
 #### Update service
 
 ```bash
-$ bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --timeout=600
+$ bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --wait-timeout=600
 Start deploying...
 Deploying... [0/1] (20 seconds elapsed)
 New task: arn:aws:ecs:ap-northeast-1:xxxx:task-definition/sandbox-development:68

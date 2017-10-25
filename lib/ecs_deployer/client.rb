@@ -14,7 +14,7 @@ module EcsDeployer
 
     # @return [EcsDeployer::Task::Client]
     def task
-      EcsDeployer::Task::Client.new(@cluster, @aws_options)
+      EcsDeployer::Task::Client.new(@aws_options)
     end
 
     # @return [EcsDeployer::ScheduledTask::Client]

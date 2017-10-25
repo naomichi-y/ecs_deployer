@@ -5,8 +5,7 @@ require 'oj'
 module EcsDeployer
   module Task
     class Client
-      def initialize(cluster, aws_options = {})
-        @cluster = cluster
+      def initialize(aws_options = {})
         @ecs = Aws::ECS::Client.new(aws_options)
         @cipher = EcsDeployer::Util::Cipher.new(aws_options)
       end
@@ -39,11 +38,12 @@ module EcsDeployer
         result[:task_definition]
       end
 
+      # @param [String] cluster
       # @param [String] service
       # @return [String]
-      def register_clone(service)
+      def register_clone(cluster, service)
         result = @ecs.describe_services(
-          cluster: @cluster,
+          cluster: cluster,
           services: [service]
         )
 

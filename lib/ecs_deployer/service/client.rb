@@ -12,7 +12,7 @@ module EcsDeployer
         @logger = logger
 
         @ecs = Aws::ECS::Client.new(aws_options)
-        @task = EcsDeployer::Task::Client.new(cluster, aws_options)
+        @task = EcsDeployer::Task::Client.new(aws_options)
 
         @wait_timeout = 900
         @polling_interval = 20
@@ -22,7 +22,7 @@ module EcsDeployer
       # @param [Aws::ECS::Types::TaskDefinition] task_definition
       # @return [Aws::ECS::Types::Service]
       def update(service, task_definition = nil, wait = true)
-        task_definition = @task.register_clone(service) if task_definition.nil?
+        task_definition = @task.register_clone(@cluster, service) if task_definition.nil?
         result = @ecs.update_service(
           cluster: @cluster,
           service: service,
