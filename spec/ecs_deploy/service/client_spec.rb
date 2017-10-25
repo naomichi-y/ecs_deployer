@@ -3,57 +3,38 @@ require 'spec_helper'
 module EcsDeployer
   module Service
     describe Client do
-      let(:logger) { Logger.new(STDOUT) }
-      let(:service_client) { EcsDeployer::Service::Client.new('cluster', logger, region: 'ap-northeast-1') }
-      let(:task_definition) { YAML.load(File.read('spec/fixtures/rspec.yml')) }
+      let(:logger) { Logger.new(nil) }
       let(:ecs_client_mock) { double('Aws::ECS::Client') }
+      let(:service_client) { EcsDeployer::Service::Client.new('cluster', logger) }
 
       before do
         allow(Aws::ECS::Client).to receive(:new).and_return(ecs_client_mock)
+        allow(EcsDeployer::Task::Client).to receive(:new)
       end
 
       describe 'update' do
-        before do
-          allow(ecs_client_mock).to receive(:update_service).and_return(
-            Aws::ECS::Types::UpdateServiceResponse.new(
-              service: Aws::ECS::Types::Service.new(
-                service_arn: 'service_arn'
-              )
-            )
-          )
+        it 'should be return service arn' do
+          task_definition_mock = double('AWS::ECS::TaskDefinition')
+          allow(task_definition_mock).to receive(:[]).with(:family).and_return('family')
+          allow(task_definition_mock).to receive(:[]).with(:revision).and_return('revision')
+
+          update_service_response_mock = double('Aws::ECS::Types::UpdateServiceResponse')
+          service_mock = double('Aws::ECS::Types::Service')
+
+          allow(service_mock).to receive(:task_definition)
+          allow(update_service_response_mock).to receive(:service).and_return(service_mock)
+          allow(ecs_client_mock).to receive(:update_service).and_return(update_service_response_mock)
           allow(service_client).to receive(:wait_for_deploy)
-        end
 
-        context 'when wait is true' do
-          it 'should be return service arn' do
-            task_definition_mock = double('AWS::ECS::TaskDefinition')
-            allow(task_definition_mock).to receive(:[]).with(:family).and_return('family')
-            allow(task_definition_mock).to receive(:[]).with(:revision).and_return('revision')
-
-            expect(service_client.update('service', task_definition_mock, true)).to eq('service_arn')
-            expect(service_client).to have_received(:wait_for_deploy)
-          end
-        end
-
-        context 'when wait is false' do
-          it 'should be return service arn' do
-            task_definition_mock = double('AWS::ECS::TaskDefinition')
-            allow(task_definition_mock).to receive(:[]).with(:family).and_return('family')
-            allow(task_definition_mock).to receive(:[]).with(:revision).and_return('revision')
-
-            expect(service_client.update('service', task_definition_mock, false)).to eq('service_arn')
-            expect(service_client).to_not have_received(:wait_for_deploy)
-          end
+          expect(service_client.update('service', task_definition_mock, true)).to be_a(service_mock.class)
         end
       end
 
       describe 'exist?' do
         before do
-          allow(ecs_client_mock).to receive(:describe_services).and_return(
-            Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [Aws::ECS::Types::Service.new(service_name: 'service_name')]
-            )
-          )
+          describe_services_response_mock = double('Aws::ECS::Types::DescribeServicesResponse')
+          allow(describe_services_response_mock).to receive(:[]).with(:services).and_return([{service_name: 'service_name'}])
+          allow(ecs_client_mock).to receive(:describe_services).and_return(describe_services_response_mock)
         end
 
         context 'when exist service' do
@@ -70,95 +51,68 @@ module EcsDeployer
       end
 
       describe 'deploy_status' do
-        context 'when task exist' do
-          context 'when deploying' do
-            it 'should be return result' do
-              allow(service_client).to receive(:detect_stopped_task)
-              allow(ecs_client_mock).to receive(:list_tasks).and_return(
-                Aws::ECS::Types::ListTasksResponse.new(
-                  task_arns: ['task_arn']
-                )
-              )
-              allow(ecs_client_mock).to receive(:describe_tasks).and_return(
-                Aws::ECS::Types::DescribeTasksResponse.new(
-                  tasks: [
-                    Aws::ECS::Types::Task.new(
-                      task_definition_arn: 'new_arn',
-                      last_status: 'RUNNING'
-                    )
-                  ]
-                )
-              )
-              result = service_client.send(:deploy_status, 'service', 'task_definition_arn')
-              expect(result[:current_running_count]).to eq(1)
-              expect(result[:new_running_count]).to eq(0)
-              expect(result[:task_status_logs][0]).to include('[RUNNING]')
-            end
-          end
+        before do
+          allow(service_client).to receive(:detect_stopped_task)
+          allow(ecs_client_mock).to receive(:list_tasks).and_return({ task_arns: ['running_task_arn'] })
+        end
 
-          context 'when deployed' do
-            it 'should be return result' do
-              allow(service_client).to receive(:detect_stopped_task)
-              allow(ecs_client_mock).to receive(:list_tasks).and_return(
-                Aws::ECS::Types::ListTasksResponse.new(
-                  task_arns: ['task_arn']
-                )
-              )
-              allow(ecs_client_mock).to receive(:describe_tasks).and_return(
-                Aws::ECS::Types::DescribeTasksResponse.new(
-                  tasks: [
-                    Aws::ECS::Types::Task.new(
-                      task_definition_arn: 'new_arn',
-                      last_status: 'RUNNING'
-                    ),
-                    Aws::ECS::Types::Task.new(
-                      task_definition_arn: 'new_arn',
-                      last_status: 'RUNNING'
-                    )
-                  ]
-                )
-              )
-              result = service_client.send(:deploy_status, 'service', 'new_arn')
-              expect(result[:current_running_count]).to eq(2)
-              expect(result[:new_running_count]).to eq(2)
-              expect(result[:task_status_logs][0]).to include('[RUNNING]')
-            end
+        let(:describe_tasks_response_mock) { double('Aws::ECS::Types::DescribeTasksResponse') }
+        let(:task_mock) { double('ECS::Types::Task') }
+
+        context 'when deploying' do
+          it 'should be return result' do
+            allow(task_mock).to receive(:[]).with(:task_definition_arn).and_return('old_task_arn')
+            allow(task_mock).to receive(:[]).with(:last_status).and_return('RUNNING')
+            allow(describe_tasks_response_mock).to receive(:[]).with(:tasks).and_return([task_mock])
+            allow(ecs_client_mock).to receive(:describe_tasks).and_return(describe_tasks_response_mock)
+
+            result = service_client.send(:deploy_status, 'service', 'new_task_arn')
+            expect(result[:current_running_count]).to eq(1)
+            expect(result[:new_running_count]).to eq(0)
           end
         end
 
-        context 'when task not exist' do
-          it 'shuld be return error' do
-            allow(ecs_client_mock).to receive(:list_tasks).and_return(
-              Aws::ECS::Types::ListTasksResponse.new(
-                task_arns: []
-              )
-            )
-            expect { service_client.send(:deploy_status, 'service', 'task_definition_arn') }.to raise_error(TaskRunningError)
+        context 'when deployed' do
+          it 'should be return result' do
+            allow(task_mock).to receive(:[]).with(:task_definition_arn).and_return('new_task_arn')
+            allow(task_mock).to receive(:[]).with(:last_status).and_return('RUNNING')
+            allow(describe_tasks_response_mock).to receive(:[]).with(:tasks).and_return([task_mock, task_mock])
+            allow(ecs_client_mock).to receive(:describe_tasks).and_return(describe_tasks_response_mock)
+
+            result = service_client.send(:deploy_status, 'service', 'new_task_arn')
+            expect(result[:current_running_count]).to eq(2)
+            expect(result[:new_running_count]).to eq(2)
           end
         end
       end
 
       describe 'wait_for_deploy' do
-        context 'when desired count more than 1' do
-          context 'when not timed out' do
-            it 'should be break' do
-              # @TODO
-            end
+        before do
+          allow(service_client).to receive(:exist?).and_return(true)
+
+          service_client.wait_timeout = 0.3
+          service_client.polling_interval = 0.1
+        end
+
+        context 'when deploy complete' do
+          it 'shuld be return success' do
+            allow(service_client).to receive(:deploy_status).and_return({
+              new_running_count: 1,
+              current_running_count: 1,
+              task_status_logs: ['task_status_logs']
+            })
+            expect { service_client.send(:wait_for_deploy, 'service', 'task_definition_arn') }.to_not raise_error
           end
+        end
 
-          context 'when timed out' do
-            it 'shuld be return error' do
-              allow_any_instance_of(EcsDeployer::Service::Client).to receive(:exist?).and_return(true)
-              allow_any_instance_of(EcsDeployer::Service::Client).to receive(:deploy_status).and_return(
-                new_running_count: 0,
-                current_running_count: 1,
-                task_status_logs: ['task_status_logs']
-              )
-              service_client.instance_variable_set(:@wait_timeout, 0.03)
-              service_client.instance_variable_set(:@polling_interval, 0.01)
-
-              expect { service_client.send(:wait_for_deploy, 'service', 'task_definition_arn') }.to raise_error(DeployTimeoutError)
-            end
+        context 'when timed out' do
+          it 'shuld be return error' do
+            allow(service_client).to receive(:deploy_status).and_return({
+              new_running_count: 0,
+              current_running_count: 1,
+              task_status_logs: ['task_status_logs']
+            })
+            expect { service_client.send(:wait_for_deploy, 'service', 'task_definition_arn') }.to raise_error(DeployTimeoutError)
           end
         end
       end

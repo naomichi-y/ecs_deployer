@@ -4,7 +4,7 @@ module EcsDeployer
   module Util
     describe Cipher do
       let(:kms_client_mock) { double('Aws::KMS::Client') }
-      let(:cipher) { EcsDeployer::Util::Cipher.new(region: 'ap-northeast-1') }
+      let(:cipher) { EcsDeployer::Util::Cipher.new }
 
       before do
         allow(Aws::KMS::Client).to receive(:new).and_return(kms_client_mock)

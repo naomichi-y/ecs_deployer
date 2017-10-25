@@ -3,7 +3,7 @@ require 'spec_helper'
 module EcsDeployer
   module Task
     describe Client do
-      let(:task_client) { EcsDeployer::Task::Client.new('cluster', region: 'ap-northeast-1') }
+      let(:task_client) { EcsDeployer::Task::Client.new('cluster') }
       let(:task_definition) { YAML.load(File.read('spec/fixtures/rspec.yml')) }
       let(:kms_client_mock) { double('Aws::KMS::Client') }
       let(:environments) do
@@ -29,6 +29,7 @@ module EcsDeployer
       let(:ecs_client_mock) { double('Aws::ECS::Client') }
 
       before do
+        allow(Aws::ECS::Client).to receive(:new)
         allow(Aws::KMS::Client).to receive(:new).and_return(kms_client_mock)
       end
 
