@@ -1,6 +1,7 @@
 require 'ecs_deployer/client'
 require 'ecs_deployer/cli'
 require 'ecs_deployer/error'
+require 'ecs_deployer/service/client'
 require 'ecs_deployer/task/client'
 require 'ecs_deployer/scheduled_task/client'
 require 'ecs_deployer/scheduled_task/target'

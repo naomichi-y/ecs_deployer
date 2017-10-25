@@ -1,8 +1,8 @@
+require 'aws-sdk'
+
 module EcsDeployer
   module ScheduledTask
     class Client
-      attr_reader :cloudwatch_events
-
       def initialize(cluster, aws_options = {})
         @cluster = cluster
         @cloudwatch_events = Aws::CloudWatchEvents::Client.new(aws_options)

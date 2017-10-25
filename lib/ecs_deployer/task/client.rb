@@ -1,11 +1,10 @@
+require 'aws-sdk'
 require 'yaml'
 require 'oj'
 
 module EcsDeployer
   module Task
     class Client
-      attr_reader :ecs
-
       def initialize(cluster, aws_options = {})
         @cluster = cluster
         @ecs = Aws::ECS::Client.new(aws_options)

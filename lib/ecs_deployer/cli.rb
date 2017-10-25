@@ -39,7 +39,7 @@ module EcsDeployer
     option :timeout, type: :numeric, default: 600
     def update_service
       @deployer.timeout = options[:timeout]
-      result = @deployer.update_service(
+      result = @deployer.service.update(
         options[:cluster],
         options[:service],
         options[:wait]

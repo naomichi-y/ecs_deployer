@@ -26,6 +26,7 @@ module EcsDeployer
         task_definition['container_definitions'][0]['environment'] += environments
         task_definition
       end
+      let(:ecs_client_mock) { double('Aws::ECS::Client') }
 
       before do
         allow(Aws::KMS::Client).to receive(:new).and_return(kms_client_mock)
@@ -54,7 +55,8 @@ module EcsDeployer
           task_definition_mock = double('AWS::ECS::TaskDefinition')
           register_task_definition_response_mock = double('Aws::ECS::Types::RegisterTaskDefinitionResponse')
           allow(register_task_definition_response_mock).to receive(:[]).with(:task_definition).and_return(task_definition_mock)
-          allow(task_client.ecs).to receive(:register_task_definition).and_return(register_task_definition_response_mock)
+          allow(ecs_client_mock).to receive(:register_task_definition).and_return(register_task_definition_response_mock)
+          allow(Aws::ECS::Client).to receive(:new).and_return(ecs_client_mock)
 
           expect(task_client.register_hash(task_definition)).to be_a(task_definition_mock.class)
         end
@@ -62,12 +64,13 @@ module EcsDeployer
 
       describe 'register_clone' do
         before do
-          allow(task_client.ecs).to receive(:describe_services).and_return(
+          allow(Aws::ECS::Client).to receive(:new).and_return(ecs_client_mock)
+          allow(ecs_client_mock).to receive(:describe_services).and_return(
             services: [
               service_name: 'service'
             ]
           )
-          allow(task_client.ecs).to receive(:describe_task_definition).and_return(
+          allow(ecs_client_mock).to receive(:describe_task_definition).and_return(
             task_definition: {}
           )
           allow(task_client).to receive(:register_hash).and_return('new_task_definition_arn')

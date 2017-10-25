@@ -30,7 +30,10 @@ module EcsDeployer
 
     describe 'update_service' do
       it 'shuld be output ARN' do
-        allow(deployer_mock).to receive(:update_service).and_return('service_arn')
+        service_client_mock = double('EcsDeployer::Service::Client')
+
+        allow(service_client_mock).to receive(:update).and_return('service_arn')
+        allow(deployer_mock).to receive(:service).and_return(service_client_mock)
         allow(deployer_mock).to receive(:timeout=)
 
         options = { cluster: 'cluseter', service: 'service' }
