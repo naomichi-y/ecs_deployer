@@ -18,6 +18,28 @@ module EcsDeployer
         @arn = clusters[0].cluster_arn
         @role_arn = Aws::IAM::Role.new(role, @aws_options).arn unless role.nil?
         @task_count = 1
+        @container_overrides = []
+      end
+
+      # @param [String] name
+      # @param [Array] command
+      # @param [Hash] environments
+      def override_command(name, command, environments = {})
+        override_environments = []
+        environments.each do |environment|
+          environment.each do |env_name, env_value|
+            override_environments << {
+              name: env_name,
+              value: env_value
+            }
+          end
+        end
+
+        @container_overrides << {
+          name: name,
+          command: command,
+          environment: override_environments
+        }
       end
 
       # @return [Hash]
@@ -29,7 +51,10 @@ module EcsDeployer
           ecs_parameters: {
             task_definition_arn: @task_definition_arn,
             task_count: @task_count
-          }
+          },
+          input: {
+            containerOverrides: @container_overrides
+          }.to_json.to_s
         }
       end
     end
