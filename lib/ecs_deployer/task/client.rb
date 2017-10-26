@@ -86,8 +86,7 @@ module EcsDeployer
 
           container_definition[:environment].each do |environment|
             if environment[:value].class == String
-              match = @cipher.encrypt_value(environment[:value])
-              environment[:value] = @cipher.decrypt(match) if match
+              environment[:value] = @cipher.decrypt(environment[:value]) if @cipher.encrypt_value?(environment[:value])
             else
               # https://github.com/naomichi-y/ecs_deployer/issues/6
               environment[:value] = environment[:value].to_s

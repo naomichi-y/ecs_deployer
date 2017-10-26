@@ -108,9 +108,9 @@ module EcsDeployer
         end
 
         before do
-          allow(cipher_mock).to receive(:encrypt_value).with('VALUE').and_return(false)
-          allow(cipher_mock).to receive(:encrypt_value).with(1).and_return(false)
-          allow(cipher_mock).to receive(:encrypt_value).with('${ENCRYPT_VALUE}').and_return('decrypted_value')
+          allow(cipher_mock).to receive(:encrypt_value?).with('VALUE').and_return(false)
+          allow(cipher_mock).to receive(:encrypt_value?).with(1).and_return(false)
+          allow(cipher_mock).to receive(:encrypt_value?).with('${ENCRYPT_VALUE}').and_return('decrypted_value')
           allow(cipher_mock).to receive(:decrypt).and_return('decrypted_value')
         end
 

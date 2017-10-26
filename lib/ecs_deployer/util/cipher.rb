@@ -35,10 +35,9 @@ module EcsDeployer
       end
 
       # @param [String] value
-      # @return [String]
-      def encrypt_value(value)
-        match = value.to_s.match(ENCRYPT_VARIABLE_PATTERN)
-        value[0] if match
+      # @return [Bool]
+      def encrypt_value?(value)
+        value.to_s.match(ENCRYPT_VARIABLE_PATTERN) ? true : false
       end
     end
   end
