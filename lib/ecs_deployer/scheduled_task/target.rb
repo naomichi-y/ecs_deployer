@@ -24,7 +24,7 @@ module EcsDeployer
       # @param [String] name
       # @param [Array] command
       # @param [Hash] environments
-      def override_command(name, command, environments = {})
+      def override(name, command = nil, environments = {})
         override_environments = []
         environments.each do |environment|
           environment.each do |env_name, env_value|
