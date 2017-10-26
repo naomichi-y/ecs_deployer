@@ -79,7 +79,7 @@ Values are decrypted when task is created.
 
 ### API
 
-Refer to the [sample](https://github.com/naomichi-y/ecs_deployer/tree/master/example) code.
+Refer to [sample code](https://github.com/naomichi-y/ecs_deployer/tree/master/example).
 
 `{{xxx}}` parameter is construed variable.
 
@@ -94,6 +94,8 @@ deployer.register_task('development.yml', tag: 'latest')
 ```
 
 ### CLI
+
+Please create `.env` from `.env.default` file, before running.
 
 #### Register new task
 

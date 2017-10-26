@@ -3,12 +3,17 @@ require 'aws-sdk'
 module EcsDeployer
   module ScheduledTask
     class Client
+      # @param [String] cluster
+      # @param [Hash] aws_options
+      # @return [EcsDeployer::ScheduledTask::Client]
       def initialize(cluster, aws_options = {})
         @cluster = cluster
         @cloudwatch_events = Aws::CloudWatchEvents::Client.new(aws_options)
         @aws_options = aws_options
       end
 
+      # @param [String] rule
+      # @return [Bool]
       def exist_rule?(rule)
         @cloudwatch_events.describe_rule(name: rule)
         true
@@ -16,12 +21,19 @@ module EcsDeployer
         false
       end
 
+      # @param [String] id
+      # @param [String] role
+      # @return [EcsDeployer::ScheduledTask::Target]
       def target_builder(id, role = 'ecsEventsRole')
         EcsDeployer::ScheduledTask::Target.new(@cluster, id, role, @aws_options)
       end
 
+      # @param [String] rule
+      # @param [String] schedule_expression
+      # @param [Array] targets
+      # @return [CloudWatchEvents::Types::PutRuleResponse]
       def update(rule, schedule_expression, targets)
-        @cloudwatch_events.put_rule(
+        response = @cloudwatch_events.put_rule(
           name: rule,
           schedule_expression: schedule_expression,
           state: 'ENABLED'
@@ -31,6 +43,8 @@ module EcsDeployer
             rule: rule,
             targets: targets
           )
+
+          response
         rescue => e
           @cloudwatch_events.delete_rule(name: rule)
           raise e

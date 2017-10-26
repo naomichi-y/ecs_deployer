@@ -4,6 +4,11 @@ module EcsDeployer
       attr_reader :id
       attr_accessor :arn, :role_arn, :task_definition_arn, :task_count
 
+      # @param [String] cluster
+      # @param [String] id
+      # @param [String] role
+      # @param [Hash] aws_options
+      # @return EcsDeployer::ScheduledTask::Target]
       def initialize(cluster, id, role = nil, aws_options = {})
         ecs = Aws::ECS::Client.new(aws_options)
         clusters = ecs.describe_clusters(clusters: [cluster]).clusters
@@ -15,6 +20,7 @@ module EcsDeployer
         @task_count = 1
       end
 
+      # @return [Hash]
       def to_hash
         {
           id: @id,

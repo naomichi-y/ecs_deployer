@@ -5,6 +5,8 @@ module EcsDeployer
     class Cipher
       ENCRYPT_VARIABLE_PATTERN = /^\${(.+)}$/
 
+      # @param [Hash] aws_options
+      # @return [EcsDeployer::Util::Cipher]
       def initialize(aws_options = {})
         @kms = Aws::KMS::Client.new(aws_options)
       end
@@ -30,6 +32,13 @@ module EcsDeployer
         rescue => e
           raise KmsDecryptError, e.to_s
         end
+      end
+
+      # @param [String] value
+      # @return [String]
+      def encrypt_value(value)
+        match = value.to_s.match(ENCRYPT_VARIABLE_PATTERN)
+        value[0] if match
       end
     end
   end

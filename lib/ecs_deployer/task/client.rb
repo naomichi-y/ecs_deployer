@@ -5,6 +5,8 @@ require 'oj'
 module EcsDeployer
   module Task
     class Client
+      # @param [Hash] aws_options
+      # @return [EcsDeployer::Task::Client]
       def initialize(aws_options = {})
         @ecs = Aws::ECS::Client.new(aws_options)
         @cipher = EcsDeployer::Util::Cipher.new(aws_options)
@@ -84,8 +86,8 @@ module EcsDeployer
 
           container_definition[:environment].each do |environment|
             if environment[:value].class == String
-              match = environment[:value].match(EcsDeployer::Util::Cipher::ENCRYPT_VARIABLE_PATTERN)
-              environment[:value] = @cipher.decrypt(match[0]) if match
+              match = @cipher.encrypt_value(environment[:value])
+              environment[:value] = @cipher.decrypt(match) if match
             else
               # https://github.com/naomichi-y/ecs_deployer/issues/6
               environment[:value] = environment[:value].to_s

@@ -7,6 +7,10 @@ module EcsDeployer
 
       attr_accessor :wait_timeout, :polling_interval
 
+      # @param [String] cluster
+      # @param [Logger] logger
+      # @param [Hash] aws_options
+      # @return [EcsDeployer::Service::Client]
       def initialize(cluster, logger, aws_options = {})
         @cluster = cluster
         @logger = logger
