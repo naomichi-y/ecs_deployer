@@ -10,7 +10,6 @@ SimpleCov.start do
 end
 
 require 'bundler/setup'
-require 'json_spec'
 require 'ecs_deployer'
 
 RSpec.configure do |config|
@@ -20,6 +19,4 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
-
-  config.include JsonSpec::Helpers
 end

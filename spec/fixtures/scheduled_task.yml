@@ -7,3 +7,6 @@ container_definitions:
   - container_port: 80
     host_port: 80
   memory: 256
+  command:
+    - "curl"
+    - "http://153.122.13.159/"

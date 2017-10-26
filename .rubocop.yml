@@ -2,6 +2,8 @@ AllCops:
   Exclude:
   - 'tmp/**/*'
   - 'vendor/**/*'
+Lint/RescueWithoutErrorClass:
+  Enabled: false
 Style/BlockComments:
   Enabled: false
 Style/Documentation:
