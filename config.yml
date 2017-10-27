@@ -1,0 +1,6 @@
+task_path: ./spec/fixtures/task.yml
+scheduled_task_path: ./spec/fixtures/task.yml
+cluster: default
+service: development
+scheduled_task_rule: curl
+scheduled_task_target_id: worker
