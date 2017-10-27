@@ -1,0 +1,6 @@
+task_path: ~/Projects/nichigas-sandbox/config/deploy/development.yml
+scheduled_task_path: ~/Projects/nichigas-sandbox/config/deploy/development.yml
+cluster: sandbox
+service: development
+scheduled_task_rule: curl
+scheduled_task_target_id: worker
