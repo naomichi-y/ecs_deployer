@@ -7,7 +7,7 @@
 /spec/reports/
 /tmp/
 /vendor/
-.config.local
+.config.local.yml
 
 # rspec failure tracking
 .rspec_status
