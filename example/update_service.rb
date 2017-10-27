@@ -1,10 +1,11 @@
 require 'bundler/setup'
 require 'ecs_deployer'
-require 'dotenv'
+require 'config'
 
-Dotenv.load
-path = File.expand_path(ENV['TASK_PATH'], '.')
+Config.load_and_set_settings('config.yml', 'config.local.yml')
 
-deployer = EcsDeployer::Client.new(ENV['CLUSTER'])
-task_definition = deployer.task.register(path, tag: 'latest')
-deployer.service.update(ENV['SERVICE'], task_definition)
+task_path = File.expand_path(Settings.task_path)
+
+deployer = EcsDeployer::Client.new(Settings.cluster)
+task_definition = deployer.task.register(task_path, tag: 'latest')
+deployer.service.update(Settings.service, task_definition)
