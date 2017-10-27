@@ -8,4 +8,6 @@ task_path = File.expand_path(Settings.task_path)
 
 deployer = EcsDeployer::Client.new(Settings.cluster)
 task_definition = deployer.task.register(task_path, tag: 'latest')
-deployer.service.update(Settings.service, task_definition)
+service = deployer.service.update(Settings.service, task_definition)
+
+puts service.service_arn
