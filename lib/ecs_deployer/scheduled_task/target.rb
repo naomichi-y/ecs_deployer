@@ -35,11 +35,13 @@ module EcsDeployer
           end
         end
 
-        @container_overrides << {
+        container_override = {
           name: name,
-          command: command,
-          environment: override_environments
+          command: command
         }
+        container_overrides[:environment] = override_environments if override_environments.count > 0
+
+        @container_overrides << container_override
       end
 
       # @return [Hash]
