@@ -13,5 +13,10 @@ target_builder = scheduled_task.target_builder(Settings.scheduled_task_target_id
 target_builder.task_definition_arn = task_definition.task_definition_arn
 target_builder.override_container('rails', ['curl', 'http://153.122.13.159/'])
 
-task_definition = scheduled_task.update(Settings.scheduled_task_rule, 'cron(* * * * ? *)', [target_builder.to_hash])
+task_definition = scheduled_task.update(
+  Settings.scheduled_task_rule,
+  'cron(* * * * ? *)',
+  [target_builder.to_hash],
+  description: 'Test task'
+)
 puts task_definition.rule_arn

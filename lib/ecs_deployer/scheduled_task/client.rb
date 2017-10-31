@@ -22,33 +22,29 @@ module EcsDeployer
       end
 
       # @param [String] id
-      # @param [String] role
       # @return [EcsDeployer::ScheduledTask::Target]
-      def target_builder(id, role = 'ecsEventsRole')
-        EcsDeployer::ScheduledTask::Target.new(@cluster, id, role, @aws_options)
+      def target_builder(id)
+        EcsDeployer::ScheduledTask::Target.new(@cluster, id, @aws_options)
       end
 
       # @param [String] rule
       # @param [String] schedule_expression
       # @param [Array] targets
+      # @param [Hash] options
       # @return [CloudWatchEvents::Types::PutRuleResponse]
-      def update(rule, schedule_expression, targets)
+      def update(rule, schedule_expression, targets, options = { description: nil })
         response = @cloud_watch_events.put_rule(
           name: rule,
           schedule_expression: schedule_expression,
-          state: 'ENABLED'
+          state: 'ENABLED',
+          description: options[:description]
         )
-        begin
-          @cloud_watch_events.put_targets(
-            rule: rule,
-            targets: targets
-          )
+        @cloud_watch_events.put_targets(
+          rule: rule,
+          targets: targets
+        )
 
-          response
-        rescue => e
-          @cloud_watch_events.delete_rule(name: rule)
-          raise e
-        end
+        response
       end
     end
   end
