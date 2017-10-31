@@ -2,23 +2,33 @@ module EcsDeployer
   module ScheduledTask
     class Target
       attr_reader :id
-      attr_accessor :arn, :role_arn, :task_definition_arn, :task_count
+      attr_accessor :arn, :role_arn, :task_definition_arn, :task_count, :task_role_arn
+
+      TARGET_ROLE = 'ecsEventsRole'.freeze
 
       # @param [String] cluster
       # @param [String] id
-      # @param [String] role
       # @param [Hash] aws_options
       # @return EcsDeployer::ScheduledTask::Target]
-      def initialize(cluster, id, role = nil, aws_options = {})
+      def initialize(cluster, id, aws_options = {})
         ecs = Aws::ECS::Client.new(aws_options)
         clusters = ecs.describe_clusters(clusters: [cluster]).clusters
         raise ClusterNotFoundError, "Cluster does not eixst. [#{cluster}]" if clusters.count.zero?
 
         @id = id
         @arn = clusters[0].cluster_arn
-        @role_arn = Aws::IAM::Role.new(role, @aws_options).arn unless role.nil?
         @task_count = 1
         @container_overrides = []
+
+        role(TARGET_ROLE)
+      end
+
+      def role(role)
+        @role_arn = Aws::IAM::Role.new(role, @aws_options).arn
+      end
+
+      def task_role(task_role)
+        @task_role_arn = Aws::IAM::Role.new(task_role, @aws_options).arn
       end
 
       # @param [String] name
@@ -55,6 +65,7 @@ module EcsDeployer
             task_count: @task_count
           },
           input: {
+            taskRoleArn: @task_role_arn,
             containerOverrides: @container_overrides
           }.to_json.to_s
         }
