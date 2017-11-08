@@ -32,7 +32,7 @@ module EcsDeployer
       # @param [Array] targets
       # @param [Hash] options
       # @return [CloudWatchEvents::Types::PutRuleResponse]
-      def update(rule, schedule_expression, targets, options = { description: nil })
+      def update(rule, schedule_expression, targets = [], options = { description: nil })
         response = @cloud_watch_events.put_rule(
           name: rule,
           schedule_expression: schedule_expression,
