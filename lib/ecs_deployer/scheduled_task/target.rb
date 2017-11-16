@@ -49,7 +49,7 @@ module EcsDeployer
           name: name,
           command: command
         }
-        container_overrides[:environment] = override_environments if override_environments.count > 0
+        container_override[:environment] = override_environments if override_environments.count > 0
 
         @container_overrides << container_override
       end
