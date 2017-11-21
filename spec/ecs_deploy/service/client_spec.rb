@@ -33,7 +33,14 @@ module EcsDeployer
       describe 'exist?' do
         before do
           describe_services_response_mock = double('Aws::ECS::Types::DescribeServicesResponse')
-          allow(describe_services_response_mock).to receive(:[]).with(:services).and_return([{ service_name: 'service_name' }])
+          allow(describe_services_response_mock).to receive(:[]).with(:services).and_return(
+            [
+              {
+                service_name: 'service_name',
+                status: 'ACTIVE'
+              }
+            ]
+          )
           allow(ecs_client_mock).to receive(:describe_services).and_return(describe_services_response_mock)
         end
 
