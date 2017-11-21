@@ -46,7 +46,7 @@ module EcsDeployer
           services: [service]
         )
         result[:services].each do |svc|
-          next unless svc[:service_name] == service
+          next unless svc[:service_name] == service && svc[:status] == 'ACTIVE'
           status = svc
           break
         end
