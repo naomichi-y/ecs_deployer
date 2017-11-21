@@ -37,8 +37,6 @@ module EcsDeployer
         result.service
       end
 
-      private
-
       # @param [String] service
       # @return [Bool]
       def exist?(service)
@@ -55,6 +53,8 @@ module EcsDeployer
 
         status.nil? ? false : true
       end
+
+      private
 
       # @param [String] service
       # @param [String] task_definition_arn
