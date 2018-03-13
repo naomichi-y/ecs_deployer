@@ -17,6 +17,8 @@ Deploy Docker container on AWS ECS.
   * Create
   * Update
 
+This package is used in [Genova (ECS Deployment Manager)](https://github.com/metaps/genova).
+
 ## Installation
 
 Add this line to your application's Gemfile:
