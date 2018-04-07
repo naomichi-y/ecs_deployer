@@ -1,3 +1,8 @@
+# Release news
+
+I have developed ECS deployment manager.
+http://github.com/metaps/genova
+
 # ECS Deployer
 
 [![Gem Version](https://badge.fury.io/rb/ecs_deployer.svg)](https://badge.fury.io/rb/ecs_deployer)
