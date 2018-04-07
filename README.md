@@ -1,6 +1,6 @@
 # Release news
 
-I have developed ECS deployment manager.
+I developed ECS deployment tool based on `ecs_deployer`.
 
 http://github.com/metaps/genova
 
