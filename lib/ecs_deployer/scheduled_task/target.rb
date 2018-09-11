@@ -2,9 +2,7 @@ module EcsDeployer
   module ScheduledTask
     class Target
       attr_reader :id
-      attr_accessor :arn, :role_arn, :task_definition_arn, :task_count, :task_role_arn
-
-      TARGET_ROLE = 'ecsEventsRole'.freeze
+      attr_accessor :arn, :cloudwatch_event_role_arn, :task_definition_arn, :task_count, :task_role_arn
 
       # @param [String] cluster
       # @param [String] id
@@ -19,12 +17,10 @@ module EcsDeployer
         @arn = clusters[0].cluster_arn
         @task_count = 1
         @container_overrides = []
-
-        role(TARGET_ROLE)
       end
 
-      def role(role)
-        @role_arn = Aws::IAM::Role.new(role, @aws_options).arn
+      def cloudwatch_event_role(cloudwatch_event_role)
+        @cloudwatch_event_role_arn = Aws::IAM::Role.new(cloudwatch_event_role, @aws_options).arn
       end
 
       def task_role(task_role)
@@ -59,7 +55,7 @@ module EcsDeployer
         {
           id: @id,
           arn: @arn,
-          role_arn: @role_arn,
+          role_arn: @cloudwatch_event_role_arn,
           ecs_parameters: {
             task_definition_arn: @task_definition_arn,
             task_count: @task_count
