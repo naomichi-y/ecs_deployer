@@ -31,10 +31,11 @@ module EcsDeployer
         decrypt_environment_variables!(task_definition)
 
         result = @ecs.register_task_definition(
-          container_definitions: task_definition[:container_definitions],
           family: task_definition[:family],
           task_role_arn: task_definition[:task_role_arn],
-          volumes: task_definition[:volumes]
+          execution_role_arn: task_definition[:execution_role_arn],
+          network_mode: task_definition[:network_mode],
+          container_definitions: task_definition[:container_definitions],
         )
 
         result[:task_definition]
