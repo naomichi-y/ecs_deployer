@@ -1,9 +1,3 @@
-# Release news
-
-I developed ECS deployment tool based on `ecs_deployer`.
-
-http://github.com/metaps/genova
-
 # ECS Deployer
 
 [![Gem Version](https://badge.fury.io/rb/ecs_deployer.svg)](https://badge.fury.io/rb/ecs_deployer)
@@ -11,9 +5,10 @@ http://github.com/metaps/genova
 [![Code Climate](https://codeclimate.com/github/naomichi-y/ecs_deployer/badges/gpa.svg)](https://codeclimate.com/github/naomichi-y/ecs_deployer)
 [![CircleCI](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master.svg?style=shield)](https://circleci.com/gh/naomichi-y/ecs_deployer/tree/master)
 
-## Description
+## Features
 
-Deploy Docker container on AWS ECS.
+This package provides ability to deploy tasks to AWS ECS.
+The library is used by [genova](https://github.com/metaps/genova).
 
 * Task
   * Create
@@ -22,8 +17,6 @@ Deploy Docker container on AWS ECS.
 * scheduled task
   * Create
   * Update
-
-This package is used in [Genova (ECS Deployment Manager)](https://github.com/metaps/genova).
 
 ## Installation
 
@@ -70,7 +63,7 @@ Encrypted values must be enclosed in `${XXX}`.
 ```yaml
 - environment:
   - name: MYSQL_ROOT_PASSWORD
-    value: ${fiSAIfIFxd...}
+    value: ${...}
 ```
 
 Values are decrypted when task is created.
@@ -86,8 +79,6 @@ deployer.register_task('development.yml', tag: 'latest')
 ```
 
 ### CLI
-
-Please create `.env` from `.env.default` file, before running.
 
 #### Register new task
 

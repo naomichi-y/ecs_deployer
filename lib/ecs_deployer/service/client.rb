@@ -90,25 +90,24 @@ module EcsDeployer
           desired_status: 'RUNNING'
         )
 
-        raise TaskRunningError, 'Running task not found.' if result[:task_arns].size.zero?
+        new_task_count = 0
+        status_logs = []
 
-        result = @ecs.describe_tasks(
-          cluster: @cluster,
-          tasks: result[:task_arns]
-        )
+        if result[:task_arns].size.positive?
+          result = @ecs.describe_tasks(
+            cluster: @cluster,
+            tasks: result[:task_arns]
+          )
 
-        new_running_count = 0
-        task_status_logs = []
-
-        result[:tasks].each do |task|
-          new_running_count += 1 if task_definition_arn == task[:task_definition_arn] && task[:last_status] == 'RUNNING'
-          task_status_logs << "  #{task[:task_definition_arn]} [#{task[:last_status]}]"
+          result[:tasks].each do |task|
+            new_task_count += 1 if task_definition_arn == task[:task_definition_arn] && task[:last_status] == 'RUNNING'
+            status_logs << "  #{task[:task_definition_arn]} [#{task[:last_status]}]"
+          end
         end
 
         {
-          current_running_count: result[:tasks].size,
-          new_running_count: new_running_count,
-          task_status_logs: task_status_logs
+          new_task_count: new_task_count,
+          status_logs: status_logs
         }
       end
 
@@ -118,30 +117,38 @@ module EcsDeployer
         raise ServiceNotFoundError, "'#{service}' service is not found." unless exist?(service)
 
         wait_time = 0
-        @logger.info 'Start deploying...'
+        @logger.info 'Start deployment.'
+
+        result = @ecs.describe_services(
+          cluster: @cluster,
+          services: [service]
+        )
+        desired_count = result[:services][0][:desired_count]
 
         loop do
           sleep(@polling_interval)
           wait_time += @polling_interval
           result = deploy_status(service, task_definition_arn)
 
-          @logger.info "Deploying... [#{result[:new_running_count]}/#{result[:current_running_count]}] (#{wait_time} seconds elapsed)"
+          @logger.info "Updating... [#{result[:new_task_count]}/#{desired_count}] (#{wait_time} seconds elapsed)"
           @logger.info "New task: #{task_definition_arn}"
           @logger.info LOG_SEPARATOR
 
-          result[:task_status_logs].each do |log|
-            @logger.info log
+          if result[:status_logs].count.positive?
+            result[:status_logs].each do |log|
+              @logger.info log
+            end
+
+            @logger.info LOG_SEPARATOR
           end
 
-          @logger.info LOG_SEPARATOR
-
-          if result[:new_running_count] == result[:current_running_count]
-            @logger.info "Service update succeeded. [#{result[:new_running_count]}/#{result[:current_running_count]}]"
+          if result[:new_task_count] == desired_count
+            @logger.info "Service update succeeded. [#{result[:new_task_count]}/#{desired_count}]"
             @logger.info "New task definition: #{task_definition_arn}"
 
             break
           else
-            @logger.info 'You can stop process with Ctrl+C. Deployment will continue.'
+            @logger.info 'You can stop process with Ctrl+C. Deployment continues in background.'
 
             if wait_time > @wait_timeout
               @logger.info "New task definition: #{task_definition_arn}"

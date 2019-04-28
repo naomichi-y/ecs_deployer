@@ -11,6 +11,8 @@ module EcsDeployer
         @aws_options[:profile] = options[:profile] if options[:profile]
         @aws_options[:region] = options[:region] if options[:region]
 
+        @logger = Logger.new(STDOUT)
+
         nil
       end
 
@@ -37,12 +39,12 @@ module EcsDeployer
     option :wait, type: :boolean, default: true
     option :wait_timeout, type: :numeric, default: 600
     def update_service
-      deploy_client = EcsDeployer::Client.new(options[:cluster], nil, @aws_options)
+      deploy_client = EcsDeployer::Client.new(options[:cluster], @logger, @aws_options)
       service_client = deploy_client.service
       service_client.wait_timeout = options[:wait_timeout]
       result = service_client.update(options[:service], nil, options[:wait])
 
-      puts "Update service: #{result.service_arn}"
+      puts "Service has been successfully updated: #{result.service_arn}"
     end
 
     desc 'encrypt', 'Encrypt value of argument with KMS.'
