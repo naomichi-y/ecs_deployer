@@ -38,6 +38,9 @@ Or install it yourself as:
 $ gem install ecs_deployer
 ```
 
+You can specify `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables for each command.
+Alternatively, select AWS profile with `--profile` option.
+
 ## Task definition
 
 Write task definition in YAML format.
