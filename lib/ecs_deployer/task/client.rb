@@ -50,7 +50,14 @@ module EcsDeployer
             task_definition: svc[:task_definition]
           )
 
-          return register_hash(result[:task_definition].to_hash)
+          task_definition = result[:task_definition].to_hash
+
+          delete_keys = [:task_definition_arn, :revision, :status, :requires_attributes, :compatibilities]
+          delete_keys.each do |delete_key|
+            task_definition.delete(delete_key)
+          end
+
+          return register_hash(task_definition)
         end
 
         raise ServiceNotFoundError, "'#{service}' service is not found."
