@@ -90,7 +90,8 @@ module EcsDeployer
           desired_status: 'RUNNING'
         )
 
-        new_task_count = 0
+        new_registerd_task_count = 0
+        current_task_count = 0
         status_logs = []
 
         if result[:task_arns].size.positive?
@@ -100,13 +101,18 @@ module EcsDeployer
           )
 
           result[:tasks].each do |task|
-            new_task_count += 1 if task_definition_arn == task[:task_definition_arn] && task[:last_status] == 'RUNNING'
+            if task_definition_arn == task[:task_definition_arn]
+              new_registerd_task_count += 1 if task[:last_status] == 'RUNNING'
+            else
+              current_task_count += 1
+            end
             status_logs << "  #{task[:task_definition_arn]} [#{task[:last_status]}]"
           end
         end
 
         {
-          new_task_count: new_task_count,
+          current_task_count: current_task_count,
+          new_registerd_task_count: new_registerd_task_count,
           status_logs: status_logs
         }
       end
@@ -130,7 +136,7 @@ module EcsDeployer
           wait_time += @polling_interval
           result = deploy_status(service, task_definition_arn)
 
-          @logger.info "Updating... [#{result[:new_task_count]}/#{desired_count}] (#{wait_time} seconds elapsed)"
+          @logger.info "Updating... [#{result[:new_registerd_task_count]}/#{desired_count}] (#{wait_time} seconds elapsed)"
           @logger.info "New task: #{task_definition_arn}"
           @logger.info LOG_SEPARATOR
 
@@ -142,8 +148,8 @@ module EcsDeployer
             @logger.info LOG_SEPARATOR
           end
 
-          if result[:new_task_count] == desired_count
-            @logger.info "Service update succeeded. [#{result[:new_task_count]}/#{desired_count}]"
+          if result[:new_registerd_task_count] == desired_count && result[:current_task_count] == 0
+            @logger.info "Service update succeeded. [#{result[:new_registerd_task_count]}/#{desired_count}]"
             @logger.info "New task definition: #{task_definition_arn}"
 
             break
