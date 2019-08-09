@@ -1,0 +1,10 @@
+version: '3'
+services:
+  ruby:
+    container_name: ecs_deployer_ruby
+    build:
+      context: .
+    volumes:
+      - .:/app
+      - ${ECS_TASK_PATH}:/app/example/conf/task.yml
+    env_file: .env

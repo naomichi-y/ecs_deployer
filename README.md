@@ -73,40 +73,30 @@ Values are decrypted when task is created.
 
 ## Usage
 
-### API
+### Register new task
 
-Refer to [sample code](https://github.com/naomichi-y/ecs_deployer/tree/master/example).
-
-```ruby
-deployer.register_task('development.yml', tag: 'latest')
 ```
-
-### CLI
-
-#### Register new task
-
-```bash
 $ bundle exec ecs_deployer task-register --path=spec/fixtures/task.yml --replace-variables=tag:latest
 Registered task: arn:aws:ecs:ap-northeast-1:xxx:task-definition/nginx:latest
 ```
 
-#### Encrypt environment value
+### Encrypt environment value
 
-```bash
+```
 $ bundle exec ecs_deployer encrypt --master-key=master --value='test'
 Encrypted value: ${xxx}
 ```
 
-#### Decrypt environment value
+### Decrypt environment value
 
-```bash
+```
 $ bundle exec ecs_deployer decrypt --value='${xxx}'
 Decrypted value: xxx
 ```
 
-#### Update service
+### Update service
 
-```bash
+```
 $ bundle exec ecs_deployer update-service --cluster=xxx --service=xxx --wait --wait-timeout=600
 Start deploying...
 Deploying... [0/1] (20 seconds elapsed)
@@ -127,6 +117,18 @@ You can stop process with Ctrl+C. Deployment will continue.
 Service update succeeded. [1/1]
 New task definition: arn:aws:ecs:ap-northeast-1:xxxx:task-definition/sandbox-development:68
 Update service: arn:aws:ecs:ap-northeast-1:xxxx:service/development
+```
+
+## SDK
+
+### Example
+```
+$ cp .env.default .env
+$ docker-compose-build
+
+$ docker-compose run --rm ruby bundle exec ruby example/register_task.rb
+$ docker-compose run --rm ruby bundle exec ruby example/update_service.rb
+$ docker-compose run --rm ruby bundle exec ruby example/update_scheduled_task.rb
 ```
 
 ## License

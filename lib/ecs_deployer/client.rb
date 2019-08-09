@@ -8,7 +8,7 @@ module EcsDeployer
     # @return [EcsDeployer::Client]
     def initialize(cluster, logger = nil, aws_options = {})
       @cluster = cluster
-      @logger = logger.nil? ? Logger.new(nil) : logger
+      @logger = logger.nil? ? Logger.new(STDOUT) : logger
       @aws_options = aws_options
     end
 

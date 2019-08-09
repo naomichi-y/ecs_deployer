@@ -1,13 +1,8 @@
 require 'bundler/setup'
 require 'ecs_deployer'
-require 'config'
 
-Config.load_and_set_settings('config.yml', 'config.local.yml')
-
-task_path = File.expand_path(Settings.task_path)
-
-deployer = EcsDeployer::Client.new(Settings.cluster)
-task_definition = deployer.task.register(task_path, tag: 'latest')
-service = deployer.service.update(Settings.service, task_definition)
+client = EcsDeployer::Client.new(ENV['ECS_CLUSTER'])
+task_definition = EcsDeployer::Task::Client.new.register(File.expand_path('example/conf/task.yml'), tag: 'latest')
+service = client.service.update(ENV['ECS_SERVICE'], task_definition)
 
 puts service.service_arn
