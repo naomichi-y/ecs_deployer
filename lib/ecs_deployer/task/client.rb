@@ -52,7 +52,7 @@ module EcsDeployer
 
           task_definition = result[:task_definition].to_hash
 
-          delete_keys = [:task_definition_arn, :revision, :status, :requires_attributes, :compatibilities]
+          delete_keys = %i[task_definition_arn revision status requires_attributes compatibilities]
           delete_keys.each do |delete_key|
             task_definition.delete(delete_key)
           end
@@ -68,7 +68,7 @@ module EcsDeployer
       # @param [Array, Hash] variables
       # @param [Hash] replace_variables
       def replace_parameter_variables!(variables, replace_variables = {})
-        for variable in variables do
+        variables.each do |variable|
           if variable.class == Array || variable.class == Hash
             replace_parameter_variables!(variable, replace_variables)
           elsif variable.class == String
@@ -82,6 +82,7 @@ module EcsDeployer
       # @param [Hash] task_definition
       def decrypt_environment_variables!(task_definition)
         raise TaskDefinitionValidateError, '\'container_definition\' is undefined.' unless task_definition.key?(:container_definitions)
+
         task_definition[:container_definitions].each do |container_definition|
           next unless container_definition.key?(:environment)
 

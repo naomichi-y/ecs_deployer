@@ -2,7 +2,7 @@ AllCops:
   Exclude:
   - 'tmp/**/*'
   - 'vendor/**/*'
-Lint/RescueWithoutErrorClass:
+Style/RescueStandardError:
   Enabled: false
 Style/BlockComments:
   Enabled: false
