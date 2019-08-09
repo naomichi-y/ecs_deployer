@@ -1,0 +1,18 @@
+current directory: /Users/naomichi_yamakita/Repositories/ecs_deployer/vendor/bundle/ruby/2.5.0/gems/jaro_winkler-1.5.3/ext/jaro_winkler
+/usr/local/opt/ruby/bin/ruby -r ./siteconf20190809-77931-1n1uix6.rb extconf.rb
+creating Makefile
+
+current directory: /Users/naomichi_yamakita/Repositories/ecs_deployer/vendor/bundle/ruby/2.5.0/gems/jaro_winkler-1.5.3/ext/jaro_winkler
+make "DESTDIR=" clean
+
+current directory: /Users/naomichi_yamakita/Repositories/ecs_deployer/vendor/bundle/ruby/2.5.0/gems/jaro_winkler-1.5.3/ext/jaro_winkler
+make "DESTDIR="
+compiling adj_matrix.c
+compiling codepoints.c
+compiling jaro.c
+compiling jaro_winkler.c
+linking shared-object jaro_winkler/jaro_winkler_ext.bundle
+
+current directory: /Users/naomichi_yamakita/Repositories/ecs_deployer/vendor/bundle/ruby/2.5.0/gems/jaro_winkler-1.5.3/ext/jaro_winkler
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 jaro_winkler_ext.bundle ./.gem.20190809-77931-6f97n7/jaro_winkler

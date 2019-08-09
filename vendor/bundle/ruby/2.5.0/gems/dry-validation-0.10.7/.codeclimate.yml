@@ -1,0 +1,17 @@
+engines:
+  rubocop:
+    enabled: true
+    checks:
+      Rubocop/Style/LambdaCall:
+        enabled: false
+      Rubocop/Style/StabbyLambdaParentheses:
+        enabled: false
+      Rubocop/Metrics/CyclomaticComplexity:
+        enabled: true
+        Max: 10
+ratings:
+  paths:
+    - lib/**/*.rb
+  exclude_paths:
+    - spec/**/*
+    - examples/**/*

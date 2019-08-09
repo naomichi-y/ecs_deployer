@@ -1,0 +1,102 @@
+RSpec.shared_examples_for 'Dry::Types::Nominal without primitive' do
+  def be_boolean
+    satisfy { |x| x == true || x == false  }
+  end
+
+  describe '#constrained?' do
+    it 'returns a boolean value' do
+      expect(type.constrained?).to be_boolean
+    end
+  end
+
+  describe '#default?' do
+    it 'returns a boolean value' do
+      expect(type.default?).to be_boolean
+    end
+  end
+
+  describe '#valid?' do
+    it 'returns a boolean value' do
+      expect(type.valid?(1)).to be_boolean
+    end
+  end
+
+  describe '#eql?' do
+    it 'has #eql? defined' do
+      expect(type).to eql(type)
+    end
+  end
+
+  describe '#==' do
+    it 'has #== defined' do
+      expect(type).to eq(type)
+    end
+  end
+
+  describe '#optional?' do
+    it 'returns a boolean value' do
+      expect(type.optional?).to be_boolean
+    end
+  end
+
+  describe '#to_s' do
+    it 'returns a custom string representation' do
+      if type.class.name.start_with?('Dry::Types')
+        expect(type.to_s).to start_with('#<Dry::Types')
+      end
+    end
+  end
+end
+
+RSpec.shared_examples_for 'Dry::Types::Nominal#meta' do
+  describe '#meta' do
+    it 'allows setting meta information' do
+      with_meta = type.meta(foo: :bar).meta(baz: '1')
+
+      expect(with_meta).to be_instance_of(type.class)
+      expect(with_meta.meta).to eql(foo: :bar, baz: '1')
+    end
+
+    it 'equalizes on empty meta' do
+      expect(type).to eql(type.meta({}))
+    end
+
+    it 'equalizes on filled meta' do
+      expect(type).to_not eql(type.meta(i_am: 'different'))
+    end
+
+    it 'is locally immutable' do
+      expect(type.meta).to be_a ::Hash
+      expect(type.meta).to be_frozen
+      expect(type.meta).not_to have_key :immutable_test
+      derived = type.with(meta: {immutable_test: 1})
+      expect(derived.meta).to be_frozen
+      expect(derived.meta).to eql({immutable_test: 1})
+      expect(type.meta).not_to have_key :immutable_test
+    end
+  end
+
+  describe '#pristine' do
+    it 'erases meta' do
+      expect(type.meta(foo: :bar).pristine).to eql(type)
+    end
+  end
+end
+
+RSpec.shared_examples_for Dry::Types::Nominal do
+  it_behaves_like 'Dry::Types::Nominal without primitive'
+
+  describe '#primitive' do
+    it 'returns a class' do
+      expect(type.primitive).to be_instance_of(Class)
+    end
+  end
+
+  describe '#constructor' do
+    it 'returns a constructor' do
+      constructor = type.constructor(&:to_s)
+
+      expect(constructor).to be_a(Dry::Types::Type)
+    end
+  end
+end

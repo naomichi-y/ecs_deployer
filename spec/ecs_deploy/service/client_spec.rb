@@ -74,8 +74,8 @@ module EcsDeployer
             allow(ecs_client_mock).to receive(:describe_tasks).and_return(describe_tasks_response_mock)
 
             result = service_client.send(:deploy_status, 'service', 'new_task_arn')
-            expect(result[:current_running_count]).to eq(1)
-            expect(result[:new_running_count]).to eq(0)
+            expect(result[:current_task_count]).to eq(1)
+            expect(result[:new_registerd_task_count]).to eq(0)
           end
         end
 
@@ -87,8 +87,8 @@ module EcsDeployer
             allow(ecs_client_mock).to receive(:describe_tasks).and_return(describe_tasks_response_mock)
 
             result = service_client.send(:deploy_status, 'service', 'new_task_arn')
-            expect(result[:current_running_count]).to eq(2)
-            expect(result[:new_running_count]).to eq(2)
+            expect(result[:current_task_count]).to eq(0)
+            expect(result[:new_registerd_task_count]).to eq(2)
           end
         end
       end
@@ -103,18 +103,20 @@ module EcsDeployer
 
         context 'when deploy complete' do
           it 'shuld be return success' do
-            allow(service_client).to receive(:deploy_status).and_return(new_running_count: 1,
-                                                                        current_running_count: 1,
-                                                                        task_status_logs: ['task_status_logs'])
+            allow(service_client).to receive(:deploy_status).and_return(new_registerd_task_count: 1,
+                                                                        current_task_count: 0,
+                                                                        status_logs: ['task_status_logs'])
+            allow(ecs_client_mock).to receive(:describe_services).and_return(services: [desired_count: 1])
             expect { service_client.send(:wait_for_deploy, 'service', 'task_definition_arn') }.to_not raise_error
           end
         end
 
         context 'when timed out' do
           it 'shuld be return error' do
-            allow(service_client).to receive(:deploy_status).and_return(new_running_count: 0,
-                                                                        current_running_count: 1,
-                                                                        task_status_logs: ['task_status_logs'])
+            allow(service_client).to receive(:deploy_status).and_return(new_registerd_task_count: 0,
+                                                                        current_task_count: 1,
+                                                                        status_logs: ['task_status_logs'])
+            allow(ecs_client_mock).to receive(:describe_services).and_return(services: [desired_count: 1])
             expect { service_client.send(:wait_for_deploy, 'service', 'task_definition_arn') }.to raise_error(DeployTimeoutError)
           end
         end
