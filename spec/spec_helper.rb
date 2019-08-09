@@ -5,10 +5,6 @@ if ENV['CIRCLE_ARTIFACTS']
   SimpleCov.coverage_dir(dir)
 end
 
-SimpleCov.start do
-  coverage_dir 'tmp/coverage'
-end
-
 require 'bundler/setup'
 require 'ecs_deployer'
 
