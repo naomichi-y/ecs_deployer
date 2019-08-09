@@ -1,5 +1,0 @@
---title 'dry-types'
---markup markdown
---readme README.md
---private
-lib/**/*.rb

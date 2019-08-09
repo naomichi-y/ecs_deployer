@@ -1,8 +1,0 @@
-.DS_Store
-coverage
-/.bundle
-vendor/bundle
-tmp/
-.idea/
-Gemfile.lock
-.rubocop.yml
