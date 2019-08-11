@@ -1,9 +1,9 @@
 family: nginx
 container_definitions:
-- name: web
-  image: nginx:{{tag}}
-  essential: true
-  port_mappings:
-  - container_port: 80
-    host_port: 80
-  memory: 256
+  - name: web
+    image: nginx:{{tag}}
+    essential: true
+    port_mappings:
+      - container_port: 80
+        host_port: 80
+    memory: 256
