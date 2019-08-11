@@ -1,13 +1,13 @@
-/.bundle/
 /.yardoc
 /Gemfile.lock
 /_yardoc/
 /doc/
 /pkg/
 /spec/reports/
-/tmp/
-/vendor/
-config.local.yml
 
 # rspec failure tracking
-.rspec_status
+/.rspec_status
+
+/coverage
+.env
+/example/conf/task.yml

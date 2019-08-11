@@ -1,0 +1,30 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/ruby:2.6.2
+        environment:
+          CC_TEST_REPORTER_ID: 1cb1989f71aaacc808297279555f70439ed7dcfe5fcf90248b8462c494d2cb1e
+    working_directory: ~/ecs_deployer
+    steps:
+      - checkout
+      - restore_cache:
+          key: bundle-{{ checksum "Gemfile.lock" }}
+      - run:
+          name: bundle install
+          command: bundle install --jobs=4
+      - save_cache:
+          key: bundle-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
+      - run:
+          name: Setup Code Climate
+          command: |
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+            chmod +x ./cc-test-reporter
+      - run:
+          name: rspec test
+          command: |
+            ./cc-test-reporter before-build
+            bundle exec rspec
+            ./cc-test-reporter after-build --coverage-input-type simplecov --exit-code $?

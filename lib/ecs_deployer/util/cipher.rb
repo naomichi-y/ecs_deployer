@@ -3,7 +3,7 @@ require 'base64'
 module EcsDeployer
   module Util
     class Cipher
-      ENCRYPT_VARIABLE_PATTERN = /^\${(.+)}$/
+      ENCRYPT_VARIABLE_PATTERN = /^\${(.+)}$/.freeze
 
       # @param [Hash] aws_options
       # @return [EcsDeployer::Util::Cipher]

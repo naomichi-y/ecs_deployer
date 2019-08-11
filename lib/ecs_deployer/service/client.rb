@@ -47,6 +47,7 @@ module EcsDeployer
         )
         result[:services].each do |svc|
           next unless svc[:service_name] == service && svc[:status] == 'ACTIVE'
+
           status = svc
           break
         end
@@ -148,7 +149,7 @@ module EcsDeployer
             @logger.info LOG_SEPARATOR
           end
 
-          if result[:new_registerd_task_count] == desired_count && result[:current_task_count] == 0
+          if result[:new_registerd_task_count] == desired_count && result[:current_task_count].zero?
             @logger.info "Service update succeeded. [#{result[:new_registerd_task_count]}/#{desired_count}]"
             @logger.info "New task definition: #{task_definition_arn}"
 
