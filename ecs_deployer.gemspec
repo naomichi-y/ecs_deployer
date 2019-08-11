@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'aws-sdk', '>= 3.0.1'
   spec.add_dependency 'oj', '~> 3.8.1'
-  spec.add_dependency 'thor', '~> 0.20.3'
+  spec.add_dependency 'thor', '~> 0.19.4'
   spec.add_development_dependency 'bundler', '~> 1.17.2'
   spec.add_development_dependency 'codeclimate-test-reporter', '~> 1.0'
   spec.add_development_dependency 'rake', '~> 12.3.3'
