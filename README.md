@@ -127,6 +127,7 @@ $ cp .env.default .env
 $ docker-compose-build
 
 $ docker-compose run --rm ruby bundle exec ruby example/register_task.rb
+$ docker-compose run --rm ruby bundle exec ruby example/run_task.rb
 $ docker-compose run --rm ruby bundle exec ruby example/update_service.rb
 $ docker-compose run --rm ruby bundle exec ruby example/update_scheduled_task.rb
 ```
