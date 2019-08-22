@@ -29,13 +29,13 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'aws-sdk', '>= 3.0.1'
-  spec.add_dependency 'oj', '~> 3.8.1'
-  spec.add_dependency 'thor', '~> 0.19.4'
-  spec.add_development_dependency 'bundler', '~> 1.17.2'
-  spec.add_development_dependency 'codeclimate-test-reporter', '~> 1.0'
-  spec.add_development_dependency 'rake', '~> 12.3.3'
-  spec.add_development_dependency 'rspec', '~> 3.8.0'
-  spec.add_development_dependency 'rubocop', '~> 0.74.0'
-  spec.add_development_dependency 'simplecov', '~> 0.17.0'
+  spec.add_dependency 'aws-sdk'
+  spec.add_dependency 'oj'
+  spec.add_dependency 'thor'
+  spec.add_development_dependency 'bundler'
+  spec.add_development_dependency 'codeclimate-test-reporter'
+  spec.add_development_dependency 'rake'
+  spec.add_development_dependency 'rspec'
+  spec.add_development_dependency 'rubocop'
+  spec.add_development_dependency 'simplecov'
 end

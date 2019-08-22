@@ -124,7 +124,7 @@ Update service: arn:aws:ecs:ap-northeast-1:xxxx:service/development
 ### Example
 ```
 $ cp .env.default .env
-$ docker-compose-build
+$ docker-compose build
 
 $ docker-compose run --rm ruby bundle exec ruby example/register_task.rb
 $ docker-compose run --rm ruby bundle exec ruby example/run_task.rb
