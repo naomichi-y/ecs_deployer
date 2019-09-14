@@ -1,3 +1,5 @@
+# This package has been integrated to [genova](https://github.com/metaps/genova). ecs_deployer has finished maintenance.
+
 # ECS Deployer
 
 [![Gem Version](https://badge.fury.io/rb/ecs_deployer.svg)](https://badge.fury.io/rb/ecs_deployer)
